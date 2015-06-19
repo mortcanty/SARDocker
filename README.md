@@ -1,8 +1,8 @@
 # Change Detection with Multitemporal Polarimetric SAR Imagery
 
-Source code for a Docker image  for carrying out change detection on
-polarimetric SAR images in multi-look covariance matrix format. The 
-bash and Python are served in an IPython notebook.
+This repo contains the source files for the Docker image mort/sardocker, which wraps
+command line versions of several polarimetric SAR Python scripts for the textbook 
+<a href="http://www.amazon.com/Analysis-Classification-Change-Detection-Sensing/dp/1466570377/ref=dp_ob_title_bk">Image Analysis, Classification and Change Detection in Remote Sensing, 3rd Ed., CRC Press 2014</a>.
 
 ###Installation
 On 64-bit Ubuntu Linux:
@@ -12,8 +12,8 @@ On 64-bit Ubuntu Linux:
      where *your_image_directory* is the path to your SAR data. 
  3. Point your browser to<br /> 
     __localhost:433__
- 4. Click on this tutorial, or open a new notebook with __New/Python 2__.
+ 4. Click on the tutorial, or open a new notebook with __New/Python 2__.
  
-On WIndows (or Mac), <a href="https://docs.docker.com/installation/windows/">install boot2docker</a>, share your image directory with VirtualBox and proceed from step 2. above.
+On Windows (or Mac), <a href="https://docs.docker.com/installation/windows/">install boot2docker</a>, share your image directory with VirtualBox and proceed from step 2. above.
 
  
