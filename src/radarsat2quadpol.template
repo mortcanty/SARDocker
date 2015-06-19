@@ -1,0 +1,41 @@
+MapReady configuration file for processing quadpol Radarsat-2 PolSARpro data
+
+[General]
+input file = basename/T3
+ancillary file = basename/product.xml
+output file = basename_MapReady
+project = 0
+files = 0
+import = 1
+external = 0
+sar processing = 0
+polarimetry = 0
+terrain correction = 0
+calibration = 0
+geocoding = 1
+export = 1
+intermediates = 0
+short configuration file = 0
+default values = /usr/local/share/asf_tools/mapready/asf_mapready/asf_mapready.defaults
+thumbnail = 0
+
+[Import]
+format = polsarpro
+output db = 0
+dump envi header = 0
+multilook SLC = 1
+apply ers2 gain fix = 0
+image data type = POLARIMETRIC_MATRIX
+
+[Geocoding]
+projection = /sar/utm.prj
+datum = WGS84
+spheroid = 
+resampling = bilinear
+force = 0
+pixel spacing = 20.5
+
+[Export]
+format = geotiff
+byte conversion = none
+

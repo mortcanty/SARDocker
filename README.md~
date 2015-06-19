@@ -1,0 +1,5 @@
+# Change Detection with Multitemporal Polarimetric SAR Imagery
+
+This __Docker image__ provides scripts for carrying out change detection on
+polarimetric SAR images in multi-look covariance matrix format.
+ 
