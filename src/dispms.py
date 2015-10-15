@@ -249,7 +249,7 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
 
 def main():
     usage = '''Usage: python %s [-c] [-C] [-f filename1] [-F filename2] [-p posf] [P posF [-d dimsf] [-D dimsF]\n
-                                        [-e enhancementf] [-E enhancementF\n
+                                        [-e enhancementf] [-E enhancement]\n
             if -f is not specified it will be queried\n
             use -c or -C for classification image\n 
             RGB bandPositions and spatialDimensions are lists, e.g., -p [1,4,3] -d [0,0,400,400] \n

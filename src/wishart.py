@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 #******************************************************************************
 #  Name:     wishart.py
-#  Purpose:  Perform change detection on bitemporal, polarimetric imagery 
+#  Purpose:  Perform change detection on bitemporal, polarimetric SAR imagery 
 #            Based on Allan Nielsen's Matlab script
 #  Usage:             
-#    python wishart.py [-d dims] [-s significance] file1 file2
+#    python wishart.py [-d dims] [-s significance] file1 file2 outfile enl1 enl2
 #
 #  Copyright (c) 2015, Mort Canty
 #    This program is free software; you can redistribute it and/or modify
@@ -27,9 +27,9 @@ def main():
     usage = '''
 Usage:
 ------------------------------------------------
-    python %s [-h] [-d dims] [-s significance] file1 file2 outfn numlooks1 numlooks2
+    python %s [-h] [-d dims] [-s significance] file1 file2 outfile enl1 enl2
     
-    Perform change detection on bitemporal, polarimetric imagery.
+    Perform change detection on bitemporal, polarimetric SAR imagery.
 --------------------------------------------'''%sys.argv[0]
 
     options,args = getopt.getopt(sys.argv[1:],'hd:s:')
@@ -52,9 +52,9 @@ Usage:
     outfn = args[2]
     m1 = eval(args[3])
     m2 = eval(args[4])
-    print '================================'
-    print 'Complex Wishart Change Detection'
-    print '================================'
+    print '============================================'
+    print 'Bi-temporal Complex Wishart Change Detection'
+    print '============================================'
     print time.asctime()
     gdal.AllRegister()       
 #  first SAR image                 

@@ -13,11 +13,17 @@ if [ $2 == 'rs2quad' ]
 then 
 # prepare the MapReady configuration file
 	basename=$imdir$(ls -l $imdir | grep 'RS2_OK' | grep '_SLC$' | grep $1 | awk '{print $9}') 
-    sed 's:basename:'$basename':g' radarsat2quadpol.template >> mapready.cfg
+    sed 's:basename:'$basename':g' /sar/radarsat2quadpol.template > /sar/mapready.cfg
+# Edit the first ENVI header in the PolSARPro directory
+	pspdir=$basename'/polsarpro/T3'	
+	if [[ $(cat $pspdir/T11.bin.hdr | grep 'description' | grep '}$') ]]
+	then 	
+        sed -i s/"{"/"{\n"/ $pspdir/T11.bin.hdr
+    fi    
 # get the number of looks
-	dos2unix -q $basename'/T3/config.txt'
-    rows=$(grep -m1 "[0-9]" $basename'/T3/config.txt')
-    cols=$(grep  -A 1 "Ncol" $basename'/T3/config.txt' | grep "[0-9]")
+    dos2unix $pspdir/'config.txt'	
+    rows=$(grep -m1 "[0-9]" $pspdir/'config.txt')
+    cols=$(grep  -A 1 "Ncol" $pspdir/'config.txt' | grep "[0-9]")
 	rows0=$(grep -oPm1 "(?<=<numberOfLines>)[^<]+" $basename'/product.xml') 
 	cols0=$(grep -oPm1 "(?<=<numberOfSamplesPerLine>)[^<]+" $basename'/product.xml') 
 	echo "Original SLC image dimensions:      rows "$rows0"  cols "$cols0
@@ -28,14 +34,18 @@ elif [ $2 == 'tsxdual' ]
 then 
 # prepare the MapReady configuration file
     basename=$imdir$(ls -l $imdir | grep 'TSX$' | grep $1 | awk '{print $9}')
-	cd $basename
-	ancillary=$basename'/'$(ls -l | grep $1 | awk '{print $9}')
-	cd /sar
+	ancillary=$basename'/'$(ls -l $basename | grep $1 | awk '{print $9}')
 	sed -e 's:basename:'$basename':g' -e 's:auxil:'$ancillary':g' /sar/terrasarxdualpol.template > /sar/mapready.cfg
+# Edit the first ENVI header in the PolSARPro directory
+	pspdir=$basename'/polsarpro/C2'
+	if [[ $(cat $pspdir/C11.bin.hdr | grep 'description' | grep '}$') ]]
+	then 	
+        sed -i s/"{"/"{\n"/ $pspdir/C11.bin.hdr
+    fi 
 # get the number of looks
-	dos2unix -q $basename'/C2/config.txt'
-    rows=$(grep -m1 "[0-9]" $basename'/C2/config.txt')
-    cols=$(grep  -A 1 "Ncol" $basename'/C2/config.txt' | grep "[0-9]")
+    dos2unix $pspdir/'config.txt'
+    rows=$(grep -m1 "[0-9]" $pspdir/'config.txt')
+    cols=$(grep  -A 1 "Ncol" $pspdir/'config.txt' | grep "[0-9]")
     rows0=$(grep -oPm1 "(?<=<numberOfRows>)[^<]+" $ancillary) 
 	cols0=$(grep -oPm1 "(?<=<numberOfColumns>)[^<]+" $ancillary) 
     echo "Original SLC image dimensions:      rows "$rows0"  cols "$cols0
@@ -58,11 +68,9 @@ echo '***** Done, see mapready.log'
 
 echo '***** Combining into a single image file ...'
 
-
 # test for T3 (quadpol) or C2 (dualpol) directory
 dir=$imdir$(ls -l $imdir | grep 'MapReady$' | grep $1 | awk '{print $9}')
 subdir='/'$(ls -l $dir | grep [CT][23] | awk '{print $9}')'/'
 
 dir=$imdir$(ls -l $imdir | grep 'MapReady$' | grep $1 | awk '{print $9}')$subdir
 fn=$dir$(python /sar/ingest.py $dir | tee /dev/tty | grep 'written' | awk '{print $5}')
-

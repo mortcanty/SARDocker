@@ -59,7 +59,7 @@ RUN     ./install_asf.sh
 WORKDIR /
 RUN     rm mapready-3.2.1-src.tar.gz
 
-ENV     SCRIPTS_CHANGED 2015-06-20
+ENV     SCRIPTS_CHANGED 2015-10-15i
 #---------------------------------
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
 WORKDIR /
@@ -85,17 +85,21 @@ COPY    ingest.py /sar/ingest.py
 COPY    register.py /sar/register.py
 COPY    enlml.py /sar/enlml.py
 COPY    wishart.py /sar/wishart.py
+COPY    omnibus.py /sar/omnibus.py
 
 COPY    mapready.sh /sar/mapready.sh
 COPY    wishart.sh /sar/wishart.sh
+COPY    omnibus.sh /sar/omnibus.sh
 RUN     chmod u+x /sar/mapready.sh
 RUN     chmod u+x /sar/wishart.sh
+RUN     chmod u+x /sar/omnibus.sh
 
 COPY    utm.prj /sar/utm.prj
 COPY    radarsat2quadpol.template /sar/radarsat2quadpol.template
 COPY    terrasarxdualpol.template /sar/terrasarxdualpol.template
 
 COPY    tutorial.ipynb /sar/tutorial.ipynb 
+COPY    vortrag.ipynb /sar/vortrag.ipynb
 
 #COPY    gamma_filter.py /sar/gamma_filter.py
 

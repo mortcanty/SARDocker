@@ -1,7 +1,7 @@
 MapReady configuration file for processing quadpol Radarsat-2 PolSARpro data
 
 [General]
-input file = basename/T3
+input file = basename/polsarpro/T3
 ancillary file = basename/product.xml
 output file = basename_MapReady
 project = 0

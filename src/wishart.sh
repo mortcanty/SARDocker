@@ -4,7 +4,7 @@
 #
 #  ./wishart.sh yyyymmdd1 yyyymmdd2 dims enl1 enl2
 
-echo '***** PolSAR Change Detection'
+echo '***** Bitemporal PolSAR Change Detection'
 echo ' '
 
 imdir='/sar/imagery/'

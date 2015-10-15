@@ -1,7 +1,7 @@
 MapReady configuration file for processing dualpol terraSAR-X PolSARpro data
 
 [General]
-input file = basename/C2
+input file = basename/polsarpro/C2
 ancillary file = auxil
 output file = basename_MapReady
 project = 0
@@ -33,7 +33,7 @@ datum = WGS84
 spheroid = 
 resampling = bilinear
 force = 0
-pixel spacing = 7.5
+pixel spacing = -99.00
 
 [Export]
 format = geotiff
