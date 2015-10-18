@@ -22,7 +22,7 @@ echo 'spatial subset   ' $dims
 
 imdir='/sar/imagery/'
 
-# test for T3 (quadpol) or T2 (dualpol) directory
+# test for T3 (quadpol) or C2 (dualpol) directory
 dir=$imdir$(ls -l $imdir | grep 'MapReady$' | grep $1 | awk '{print $9}')
 subdir='/'$(ls -l $dir | grep [CT][23] | awk '{print $9}')'/'
 dir=$imdir$(ls -l $imdir | grep 'MapReady$' | grep $1 | awk '{print $9}')$subdir

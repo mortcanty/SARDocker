@@ -59,7 +59,7 @@ RUN     ./install_asf.sh
 WORKDIR /
 RUN     rm mapready-3.2.1-src.tar.gz
 
-ENV     SCRIPTS_CHANGED 2015-10-15i
+ENV     SCRIPTS_CHANGED 2015-10-16
 #---------------------------------
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
 WORKDIR /
@@ -70,8 +70,14 @@ WORKDIR /
 RUN     rm -rf auxil-1.1/
 RUN     rm auxil-1.1.tar.gz
 
+# enable parallel computing
+RUN     pip install ipyparallel
+RUN     jupyter notebook --generate-config
+RUN     sed -i "/# Configuration file for jupyter-notebook./a  \ 
+                c.NotebookApp.server_extensions.append('ipyparallel.nbextension')" \
+            /root/.jupyter/jupyter_notebook_config.py
 
-# ipython notebook startup script
+# ipython notebook startup script 
 ADD     notebook.sh  /
 RUN     chmod u+x /notebook.sh
 RUN     dos2unix /notebook.sh
@@ -89,7 +95,7 @@ COPY    omnibus.py /sar/omnibus.py
 
 COPY    mapready.sh /sar/mapready.sh
 COPY    wishart.sh /sar/wishart.sh
-COPY    omnibus.sh /sar/omnibus.sh
+COPY    omnibus.sh /sar/omnibus.shjupyt
 RUN     chmod u+x /sar/mapready.sh
 RUN     chmod u+x /sar/wishart.sh
 RUN     chmod u+x /sar/omnibus.sh
@@ -98,8 +104,7 @@ COPY    utm.prj /sar/utm.prj
 COPY    radarsat2quadpol.template /sar/radarsat2quadpol.template
 COPY    terrasarxdualpol.template /sar/terrasarxdualpol.template
 
-COPY    tutorial.ipynb /sar/tutorial.ipynb 
-COPY    vortrag.ipynb /sar/vortrag.ipynb
+COPY    tutorialsar.ipynb /sar/tutorial.ipynb 
 
 #COPY    gamma_filter.py /sar/gamma_filter.py
 
