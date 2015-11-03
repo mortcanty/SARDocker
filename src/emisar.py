@@ -69,5 +69,5 @@ def read_emisar(fname):
     print 'emisar data writen to %s'%outfn
     
 if __name__=='__main__':
-    read_emisar('/home/mort/imagery/sar/emisar/fl064_l.hdr')
+    read_emisar('/home/mort/imagery/sar/emisar/fl074_l.hdr')
     
