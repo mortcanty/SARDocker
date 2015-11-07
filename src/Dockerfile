@@ -59,7 +59,7 @@ RUN     ./install_asf.sh
 WORKDIR /
 RUN     rm mapready-3.2.1-src.tar.gz
 
-ENV     SCRIPTS_CHANGED 2015-11-07
+ENV     SCRIPTS_CHANGED 2015-11-07a
 #---------------------------------
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
 WORKDIR /
