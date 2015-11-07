@@ -20,13 +20,13 @@ def read_emisar(fname):
     outDataset = driver.Create(outfn,cols,rows,9,GDT_Float32)  
     dtr = np.dtype(np.float32).newbyteorder('B')
     dtc = np.dtype(np.complex64).newbyteorder('B')
-    fn = path+'/'+root+'hhhh'
+    fn = path+'/'+root+'hhhh.emi'
     a = np.reshape(np.fromfile(fn,dtr),(rows,cols)) 
     a = np.rot90(a)
     outBand = outDataset.GetRasterBand(1)
     outBand.WriteArray(a.byteswap(),0,0) 
     outBand.FlushCache() 
-    fn = path+'/'+root+'hhhv'             
+    fn = path+'/'+root+'hhhv.emi'             
     a = np.reshape(np.fromfile(fn,dtc),(rows,cols)) 
     a = np.rot90(a)
     outBand = outDataset.GetRasterBand(2)
@@ -35,7 +35,7 @@ def read_emisar(fname):
     outBand = outDataset.GetRasterBand(3)
     outBand.WriteArray(np.imag(a).byteswap(),0,0)  
     outBand.FlushCache()          
-    fn = path+'/'+root+'hhvv' 
+    fn = path+'/'+root+'hhvv.emi' 
     a = np.reshape(np.fromfile(fn,dtc),(rows,cols)) 
     a = np.rot90(a)
     outBand = outDataset.GetRasterBand(4)
@@ -44,13 +44,13 @@ def read_emisar(fname):
     outBand = outDataset.GetRasterBand(5)
     outBand.WriteArray(np.imag(a).byteswap(),0,0) 
     outBand.FlushCache()  
-    fn = path+'/'+root+'hvhv'    
+    fn = path+'/'+root+'hvhv.emi'    
     a = np.reshape(np.fromfile(fn,dtr),(rows,cols)) 
     a = np.rot90(a)
     outBand = outDataset.GetRasterBand(6)
     outBand.WriteArray(a.byteswap(),0,0) 
     outBand.FlushCache() 
-    fn = path+'/'+root+'hvvv'  
+    fn = path+'/'+root+'hvvv.emi'  
     a = np.reshape(np.fromfile(fn,dtc),(rows,cols))
     a = np.rot90(a) 
     outBand = outDataset.GetRasterBand(7)
@@ -59,7 +59,7 @@ def read_emisar(fname):
     outBand = outDataset.GetRasterBand(8)
     outBand.WriteArray(np.imag(a).byteswap(),0,0)  
     outBand.FlushCache() 
-    fn = path+'/'+root+'vvvv' 
+    fn = path+'/'+root+'vvvv.emi' 
     a = np.reshape(np.fromfile(fn,dtr),(rows,cols)) 
     a = np.rot90(a)
     outBand = outDataset.GetRasterBand(9)
@@ -69,5 +69,5 @@ def read_emisar(fname):
     print 'emisar data writen to %s'%outfn
     
 if __name__=='__main__':
-    read_emisar('/home/mort/imagery/sar/emisar/fl074_l.hdr')
+    read_emisar('/home/mort/imagery/sar/emisar/fl062_l.hdr')
     

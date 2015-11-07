@@ -59,7 +59,7 @@ RUN     ./install_asf.sh
 WORKDIR /
 RUN     rm mapready-3.2.1-src.tar.gz
 
-ENV     SCRIPTS_CHANGED 2015-10-16
+ENV     SCRIPTS_CHANGED 2015-11-07
 #---------------------------------
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
 WORKDIR /
@@ -95,7 +95,7 @@ COPY    omnibus.py /sar/omnibus.py
 
 COPY    mapready.sh /sar/mapready.sh
 COPY    wishart.sh /sar/wishart.sh
-COPY    omnibus.sh /sar/omnibus.shjupyt
+COPY    omnibus.sh /sar/omnibus.sh
 RUN     chmod u+x /sar/mapready.sh
 RUN     chmod u+x /sar/wishart.sh
 RUN     chmod u+x /sar/omnibus.sh

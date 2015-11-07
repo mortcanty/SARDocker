@@ -28,6 +28,7 @@ def main():
 Usage:
 ------------------------------------------------
     python %s [-h] [-d dims] [-s significance] file1 file2 outfile enl1 enl2
+    outfile is without path (written to same directory as file1)
     
     Perform change detection on bitemporal, polarimetric SAR imagery.
 --------------------------------------------'''%sys.argv[0]
@@ -205,11 +206,11 @@ Usage:
         print 'Incorrect number of bands'
         return   
     idx = np.where(det1 <= 0.0)
-    det1[idx] = 0.0001   
+    det1[idx] = 0.0000001   
     idx = np.where(det2 <= 0.0)
-    det2[idx] = 0.0001 
+    det2[idx] = 0.0000001 
     idx = np.where(det3 <= 0.0)
-    det3[idx] = 0.0001  
+    det3[idx] = 0.0000001  
     lnQ = cst+m1*np.log(det1)+m2*np.log(det2)-(m2+m1)*np.log(det3)
 #  test statistic    
     Z = -2*rho*lnQ
@@ -219,7 +220,7 @@ Usage:
 #  change map
     a255 = np.ones((rows,cols),dtype=np.byte)*255
     a0 = a255*0
-    c11 = np.log(k1+0.0001) 
+    c11 = np.log(k1+0.0000001) 
     min1 =np.min(c11)
     max1 = np.max(c11)
     c11 = (c11-min1)*255.0/(max1-min1)  
