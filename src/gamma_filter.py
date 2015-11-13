@@ -4,9 +4,9 @@
 #  Purpose: ;    gamma MAP adaptive filtering for polarized SAR intensity images
 #            Ref: Oliver and Quegan (2004) Understanding SAR Images, Scitech 
 #  Usage:             
-#    python gamma_filter.py 
+#    python gamma_filter.py [-h] [-d dims] infile enl
 #
-#  Copyright (c) 2014, Mort Canty
+#  Copyright (c) 2015, Mort Canty
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
 #    the Free Software Foundation; either version 2 of the License, or
@@ -19,7 +19,7 @@
 
 import auxil.auxil as auxil
 import auxil.congrid as congrid
-import os, sys, time
+import os, sys, time, getopt
 import numpy as np
 from osgeo import gdal
 from osgeo.gdalconst import GDT_Float32, GA_ReadOnly
@@ -119,33 +119,42 @@ def gamma_filter(k,inimage,outimage,rows,cols,m):
     return result          
 
 def main():
-    gdal.AllRegister()
-    path = auxil.select_directory('Choose working directory')
-    if path:
-        os.chdir(path)        
-#  SAR image    
-    infile = auxil.select_infile(title='Choose SAR image') 
-    if infile:                   
-        inDataset = gdal.Open(infile,GA_ReadOnly)     
-        cols = inDataset.RasterXSize
-        rows = inDataset.RasterYSize    
-        bands = inDataset.RasterCount
-    else:
-        return
-#  spatial subset    
-    x0,y0,rows,cols=auxil.select_dims([0,0,rows,cols])    
-#  number of looks
-    m = auxil.select_integer(5,msg='Number of looks')
-    if not m:
-        return
-#  number of iterations
-    niter = auxil.select_integer(1,msg='Number of iterations')    
-#  output file
-    outfile,fmt = auxil.select_outfilefmt() 
-    if not outfile:
-        return       
+    usage = '''
+    Usage:
+    ------------------------------------------------
+    python %s [-h] [-d dims] filename enl
+    
+    Run a gamma Map filter in the diagonal elements of a C or T matrix
+    ------------------------------------------------''' %sys.argv[0]
+    options,args = getopt.getopt(sys.argv[1:],'hd:')
+    dims = None
+    for option, value in options: 
+        if option == '-h':
+            print usage
+            return 
+        elif option == '-d':
+            dims = eval(value)  
+    if len(args) != 2:
+        print 'Incorrect number of arguments'
+        print usage
+        sys.exit(1)        
+    infile = args[0]
+    m = int(args[1])    
+    gdal.AllRegister()                  
+    inDataset = gdal.Open(infile,GA_ReadOnly)     
+    cols = inDataset.RasterXSize
+    rows = inDataset.RasterYSize    
+    bands = inDataset.RasterCount
+    if dims == None:
+        dims = [0,0,cols,rows]
+    x0,y0,cols,rows = dims      
+    path = os.path.abspath(infile)    
+    dirn = os.path.dirname(path)
+    basename = os.path.basename(infile)
+    root, ext = os.path.splitext(basename)
+    outfile = dirn + '/' + root + '_gamma' + ext    
 #  process diagonal bands only
-    driver = gdal.GetDriverByName(fmt) 
+    driver = inDataset.GetDriver() 
     if bands == 9:   
         outDataset = driver.Create(outfile,cols,rows,3,GDT_Float32)
         inimage = np.zeros((3,rows,cols))
@@ -171,21 +180,16 @@ def main():
     print '========================='
     print time.asctime()
     print 'infile:  %s'%infile
-    print 'number of looks: %i'%m   
-    print 'number of iterations: %i'%niter         
+    print 'equivalent number of looks: %i'%m      
     start = time.time() 
-    itr = 0
-    while itr < niter:
-        print 'iteration %i'%(itr+1) 
-        if bands == 9:
-            for k in range(3):
-                outimage[k] = gamma_filter(k,inimage,outimage,rows,cols,m)
-        elif bands == 4:
-            for k in range(2):
-                outimage[k] = gamma_filter(k,inimage,outimage,rows,cols,m)   
-        else:
-            outimage = gamma_filter(0,inimage,outimage,rows,cols,m)                  
-        itr += 1   
+    if bands == 9:
+        for k in range(3):
+            outimage[k] = gamma_filter(k,inimage,outimage,rows,cols,m)
+    elif bands == 4:
+        for k in range(2):
+            outimage[k] = gamma_filter(k,inimage,outimage,rows,cols,m)   
+    else:
+        outimage = gamma_filter(0,inimage,outimage,rows,cols,m)                  
     geotransform = inDataset.GetGeoTransform()
     if geotransform is not None:
         gt = list(geotransform)

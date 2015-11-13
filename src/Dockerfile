@@ -59,7 +59,7 @@ RUN     ./install_asf.sh
 WORKDIR /
 RUN     rm mapready-3.2.1-src.tar.gz
 
-ENV     SCRIPTS_CHANGED 2015-11-07a
+ENV     SCRIPTS_CHANGED 2015-11-12a
 #---------------------------------
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
 WORKDIR /
@@ -106,7 +106,7 @@ COPY    terrasarxdualpol.template /sar/terrasarxdualpol.template
 
 COPY    tutorialsar.ipynb /sar/tutorial.ipynb 
 
-#COPY    gamma_filter.py /sar/gamma_filter.py
+COPY    gamma_filter.py /sar/gamma_filter.py
 
 WORKDIR /sar  
 CMD     ["/notebook.sh"]
