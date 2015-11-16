@@ -1,7 +1,7 @@
 FROM     debian:jessie
 MAINTAINER Mort Canty "mort.canty@gmail.com"
 
-ENV    IMAGE REFRESHED_AT 2015-04-06
+ENV    IMAGE REFRESHED_AT 2015-11-16
 #-----------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python \
@@ -59,7 +59,7 @@ RUN     ./install_asf.sh
 WORKDIR /
 RUN     rm mapready-3.2.1-src.tar.gz
 
-ENV     SCRIPTS_CHANGED 2015-11-12a
+ENV     SCRIPTS_CHANGED 2015-11-16
 #---------------------------------
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
 WORKDIR /

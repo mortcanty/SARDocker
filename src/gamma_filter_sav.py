@@ -18,57 +18,62 @@
 #    GNU General Public License for more details.
 
 import auxil.auxil as auxil
+import auxil.congrid as congrid
 import os, sys, time, getopt
 import numpy as np
 from osgeo import gdal
 from osgeo.gdalconst import GDT_Float32, GA_ReadOnly
-from ipyparallel import Client
 
-def gamma_filter((k,inimage,outimage,rows,cols,m)):
-    import auxil.congrid as congrid
-    
-    def get_windex(j,cols):
-        windex = np.zeros(49,dtype=int)
-        six = np.array([0,1,2,3,4,5,6])
-        windex[0:7]   = (j-3)*cols + six
-        windex[7:14]  = (j-2)*cols + six
-        windex[14:21] = (j-1)*cols + six
-        windex[21:28] = (j)*cols   + six 
-        windex[28:35] = (j+1)*cols + six 
-        windex[35:42] = (j+2)*cols + six
-        windex[42:49] = (j+3)*cols + six
-        return windex  
+templates = np.zeros((8,7,7),dtype=int)
+for j in range(7):
+    templates[0,j,0:3] = 1
+templates[1,1,0]  = 1
+templates[1,2,:2] = 1
+templates[1,3,:3] = 1
+templates[1,4,:4] = 1
+templates[1,5,:5] = 1
+templates[1,6,:6] = 1
+templates[2] = np.rot90(templates[0])
+templates[3] = np.rot90(templates[1])
+templates[4] = np.rot90(templates[2])
+templates[5] = np.rot90(templates[3])
+templates[6] = np.rot90(templates[4])
+templates[7] = np.rot90(templates[5])
 
-    templates = np.zeros((8,7,7),dtype=int)
-    for j in range(7):
-        templates[0,j,0:3] = 1
-    templates[1,1,0]  = 1
-    templates[1,2,:2] = 1
-    templates[1,3,:3] = 1
-    templates[1,4,:4] = 1
-    templates[1,5,:5] = 1
-    templates[1,6,:6] = 1
-    templates[2] = np.rot90(templates[0])
-    templates[3] = np.rot90(templates[1])
-    templates[4] = np.rot90(templates[2])
-    templates[5] = np.rot90(templates[3])
-    templates[6] = np.rot90(templates[4])
-    templates[7] = np.rot90(templates[5])
+tmp = np.zeros((8,21),dtype=int)
+for i in range(8):
+    tmp[i,:] = np.where(templates[i].ravel())[0] 
+templates = tmp
+
+edges = np.zeros((4,3,3),dtype=int)
+edges[0] = [[-1,0,1],[-1,0,1],[-1,0,1]]
+edges[1] = [[0,1,1],[-1,0,1],[-1,-1,0]]
+edges[2] = [[1,1,1],[0,0,0],[-1,-1,-1]]
+edges[3] = [[1,1,0],[1,0,-1],[0,-1,-1]]   
     
-    tmp = np.zeros((8,21),dtype=int)
-    for i in range(8):
-        tmp[i,:] = np.where(templates[i].ravel())[0] 
-    templates = tmp
-    
-    edges = np.zeros((4,3,3),dtype=int)
-    edges[0] = [[-1,0,1],[-1,0,1],[-1,0,1]]
-    edges[1] = [[0,1,1],[-1,0,1],[-1,-1,0]]
-    edges[2] = [[1,1,1],[0,0,0],[-1,-1,-1]]
-    edges[3] = [[1,1,0],[1,0,-1],[0,-1,-1]]     
-    
+   
+def get_windex(j,cols):
+    windex = np.zeros(49,dtype=int)
+    six = np.array([0,1,2,3,4,5,6])
+    windex[0:7]   = (j-3)*cols + six
+    windex[7:14]  = (j-2)*cols + six
+    windex[14:21] = (j-1)*cols + six
+    windex[21:28] = (j)*cols   + six 
+    windex[28:35] = (j+1)*cols + six 
+    windex[35:42] = (j+2)*cols + six
+    windex[42:49] = (j+3)*cols + six
+    return windex
+
+def gamma_filter(k,inimage,outimage,rows,cols,m):
     result = np.copy(inimage[k])
     arr = outimage[k].ravel()
+    print 'filtering band %i'%(k+1)
+    print 'row: ',
+    sys.stdout.flush()    
     for j in range(3,rows-3):
+        if j%50 == 0:
+            print '%i '%j, 
+            sys.stdout.flush()
         windex = get_windex(j,cols)
         for i in range(3,cols-3):
 #          central pixel, always from original input image
@@ -110,26 +115,23 @@ def gamma_filter((k,inimage,outimage,rows,cols,m)):
                 x = (a+np.sqrt(4*g*m*alpha*mu+a**2))/(2*alpha)        
                 result[j,i] = x
             windex += 1  
-                   
+    print ' done'        
     return result          
 
 def main():
     usage = '''
     Usage:
     ------------------------------------------------
-    python %s [-h] [-p] [-d dims] filename enl
+    python %s [-h] [-d dims] filename enl
     
-    Run a gamma MAP filter in the diagonal elements of a C or T matrix
+    Run a gamma Map filter in the diagonal elements of a C or T matrix
     ------------------------------------------------''' %sys.argv[0]
-    options,args = getopt.getopt(sys.argv[1:],'hpd:')
+    options,args = getopt.getopt(sys.argv[1:],'hd:')
     dims = None
-    parallel = False
     for option, value in options: 
         if option == '-h':
             print usage
             return 
-        elif option == '-p':
-            parallel = True
         elif option == '-d':
             dims = eval(value)  
     if len(args) != 2:
@@ -178,35 +180,15 @@ def main():
     print '========================='
     print time.asctime()
     print 'infile:  %s'%infile
-    print 'equivalent number of looks: %i'%m  
-    if parallel:
-        print 'parallel processing requested'   
+    print 'equivalent number of looks: %i'%m      
     start = time.time() 
-    if parallel:
-        rc = Client()
-        v = rc[:]
-        v.execute('import numpy as np')
-        print 'available engines: %s'%str(rc.ids)
-    if bands == 9:      
-        print 'filtering 3 diagonal matrix element bands ...'   
-        if parallel:    
-            outimage = v.map_sync(gamma_filter,[(0,inimage,outimage,rows,cols,m),
-                                                (1,inimage,outimage,rows,cols,m),
-                                                (2,inimage,outimage,rows,cols,m)])
-        else:
-            outimage = map(gamma_filter,[(0,inimage,outimage,rows,cols,m),
-                                         (1,inimage,outimage,rows,cols,m),
-                                         (2,inimage,outimage,rows,cols,m)])
+    if bands == 9:
+        for k in range(3):
+            outimage[k] = gamma_filter(k,inimage,outimage,rows,cols,m)
     elif bands == 4:
-        print 'filtering 2 diagonal matrix element bands ...' 
-        if parallel:
-            outimage = v.map_sync(gamma_filter,[(0,inimage,outimage,rows,cols,m),
-                                                (1,inimage,outimage,rows,cols,m)])
-        else:
-            outimage = map(gamma_filter,[(0,inimage,outimage,rows,cols,m),
-                                                (1,inimage,outimage,rows,cols,m)])
+        for k in range(2):
+            outimage[k] = gamma_filter(k,inimage,outimage,rows,cols,m)   
     else:
-        print 'filtering scalar image ...'
         outimage = gamma_filter(0,inimage,outimage,rows,cols,m)                  
     geotransform = inDataset.GetGeoTransform()
     if geotransform is not None:

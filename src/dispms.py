@@ -105,7 +105,9 @@ def make_image(redband,greenband,blueband,rows,cols,enhance):
             mn = np.min(tmp)
             if mn < 0:
                 tmp = tmp - mn
-            tmp = np.log(tmp + 0.0001) 
+            idx = np.where(tmp == 0)
+            tmp[idx] = np.mean(tmp)
+            tmp = np.log(tmp) 
             mn =np.min(tmp)
             mx = np.max(tmp)
             tmp =(tmp-mn)*255.0/(mx-mn)  

@@ -81,7 +81,7 @@ def register(file0, file1, dims=None, outfile=None):
         ul1 = np.mat([[ulx0-gt1[0]],[uly0-gt1[3]]])
         tmp = GT1.I*ul1
         x1 = int(round(tmp[0,0]))
-        y1 = int(round(tmp[1,0]))   
+        y1 = int(round(tmp[1,0]))
     #  create output geotransform 
         gt1 = gt0   
         gt1[0] = ulx0 
@@ -173,9 +173,11 @@ Usage:
 ------------------------------------------------
     python %s [-h] [-d dims] reffilename warpfilename
     
+    
     Perform image-image registration of two polarimetric SAR images 
     via similarity warping. Assumes 9-band quad pol, 4-band dual pol
     or one-band single pol SAR images.
+    NOTE: Both images must completely include the spatial subset DIMS
 --------------------------------------------'''%sys.argv[0]
 
     options,args = getopt.getopt(sys.argv[1:],'hd:')

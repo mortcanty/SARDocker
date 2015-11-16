@@ -59,7 +59,9 @@ def logstr(x):
     min0 = np.min(x)
     if min0 < 0:
         x = x - min0
-    x = np.log(x + 0.0001) 
+    idx = np.where(x==0) # black edges?
+    x[idx] = np.mean(x)
+    x = np.log(x) 
     min1 =np.min(x)
     max1 = np.max(x)
     x =(x-min1)*255.0/(max1-min1)  
@@ -675,6 +677,15 @@ Modified from Imreg.py, see http://www.lfd.uci.edu/~gohlke/:
     lines0,samples0 = bn0.shape
 #  make reference and warp bands same shape    
     bn1 = bn1[0:lines0,0:samples0]   
+#  average out black edges (zeros or NaNs) if any    
+    idx = np.where(np.isnan(bn0))
+    bn0[idx] = 0
+    idx = np.where(bn0 == 0)
+    bn0[idx] = np.mean(bn0)
+    idx = np.where(np.isnan(bn1))
+    bn1[idx] = 0
+    idx = np.where(bn1 == 0)
+    bn1[idx] = np.mean(bn1)    
 #  get scale, angle      
     f0 = fftshift(abs(fft2(bn0)))
     f1 = fftshift(abs(fft2(bn1)))

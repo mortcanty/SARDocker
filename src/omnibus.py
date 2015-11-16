@@ -21,7 +21,6 @@ import numpy as np
 from scipy import stats, ndimage
 import os, sys, time, getopt, gdal  
 from osgeo.gdalconst import GA_ReadOnly, GDT_Float32, GDT_Byte
-from mpmath import eps
 
 def getmat(fn,x0,y0,cols,rows,bands):
 #  read 9- 4- or 1-band preprocessed files and return real/complex matrix elements 
@@ -190,7 +189,7 @@ Usage:
 #  change map
     a255 = np.ones((rows,cols),dtype=np.byte)*255
     a0 = a255*0
-    c11 = np.log(k+0.0000001) 
+    c11 = np.log(k+0.01) 
     min1 =np.min(c11)
     max1 = np.max(c11)
     c11 = (c11-min1)*255.0/(max1-min1)  
