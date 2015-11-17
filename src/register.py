@@ -171,7 +171,7 @@ def main():
     usage = '''
 Usage:
 ------------------------------------------------
-    python %s [-h] [-d dims] reffilename warpfilename
+    python %s [-h] [-d DIMS] reffilename warpfilename
     
     
     Perform image-image registration of two polarimetric SAR images 

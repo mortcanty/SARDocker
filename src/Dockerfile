@@ -91,20 +91,20 @@ COPY    ingest.py /sar/ingest.py
 COPY    register.py /sar/register.py
 COPY    enlml.py /sar/enlml.py
 COPY    wishart.py /sar/wishart.py
-COPY    omnibus.py /sar/omnibus.py
+#COPY    omnibus.py /sar/omnibus.py
 
 COPY    mapready.sh /sar/mapready.sh
 COPY    wishart.sh /sar/wishart.sh
-COPY    omnibus.sh /sar/omnibus.sh
+#COPY    omnibus.sh /sar/omnibus.sh
 RUN     chmod u+x /sar/mapready.sh
 RUN     chmod u+x /sar/wishart.sh
-RUN     chmod u+x /sar/omnibus.sh
+#RUN     chmod u+x /sar/omnibus.sh
 
 COPY    utm.prj /sar/utm.prj
 COPY    radarsat2quadpol.template /sar/radarsat2quadpol.template
 COPY    terrasarxdualpol.template /sar/terrasarxdualpol.template
 
-COPY    tutorialsar.ipynb /sar/tutorial.ipynb 
+#COPY    tutorial.ipynb /sar/tutorial.ipynb 
 
 COPY    gamma_filter.py /sar/gamma_filter.py
 
