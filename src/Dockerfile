@@ -101,7 +101,7 @@ COPY    utm.prj /sar/utm.prj
 COPY    radarsat2quadpol.template /sar/radarsat2quadpol.template
 COPY    terrasarxdualpol.template /sar/terrasarxdualpol.template
 
-#COPY    tutorialnew.ipynb /sar/tutorial.ipynb 
+COPY    tutorial.ipynb /sar/tutorial.ipynb 
 
 COPY    gamma_filter.py /sar/gamma_filter.py
 
