@@ -51,8 +51,8 @@ Usage:
     fn1 = args[0]
     fn2 = args[1]
     outfn = args[2]
-    m1 = eval(args[3])
-    m2 = eval(args[4])
+    m1 = np.float64(eval(args[3]))
+    m2 = np.float64(eval(args[4]))
     print '============================================'
     print 'Bi-temporal Complex Wishart Change Detection'
     print '============================================'

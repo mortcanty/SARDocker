@@ -1,8 +1,9 @@
 FROM     debian:jessie
 MAINTAINER Mort Canty "mort.canty@gmail.com"
 
-ENV    IMAGE REFRESHED_AT 2015-11-16
-#-----------------------------------
+ENV    IMAGE REFRESHED_AT 2015-11-13
+#------------------------------
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python \
     build-essential \
@@ -15,12 +16,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python-dev \
     python-pygments \
     python-pip 
- 
-
-ENV    PYTHON_PACKAGES 2105-04-04a
-#--------------------------------
-# ipython notebook
-RUN     pip install "ipython[notebook]"
 
 # install python environment for crc scripts
 RUN     apt-get install -y --no-install-recommends \
@@ -37,7 +32,7 @@ RUN     gcc -shared -Wall -g -o libprov_means.so -fPIC prov_means.c
 RUN     cp libprov_means.so /usr/lib/libprov_means.so
 
 
-ENV    ASF_TOOLS_PREREQUISITES REFRESHED_AT 2015-04-06a
+ENV    ASF_TOOLS REFRESHED_AT 2015-11-20
 #----------------------------------------
 # prerequisites
 RUN     apt-get install -y \
@@ -46,10 +41,8 @@ RUN     apt-get install -y \
          libgsl0ldbl zlib1g-dev \
          libgdal-dev gdal-bin    
 RUN     mv  /usr/include/zlib.h /usr/local/include/zlib.h         
-#RUN     apt-get install -y libgtk2.0-dev  libglade2-dev    
-
-ENV     ASF_TOOLS 2015-04-07
-#---------------------------            
+    
+# build           
 WORKDIR /
 COPY    mapready-3.2.1-src.tar.gz /mapready-3.2.1-src.tar.gz  
 COPY    install_asf.sh /install_asf.sh
@@ -59,7 +52,7 @@ RUN     ./install_asf.sh
 WORKDIR /
 RUN     rm mapready-3.2.1-src.tar.gz
 
-ENV     SCRIPTS_CHANGED 2015-11-16
+ENV     SCRIPTS_CHANGED 2015-11-20
 #---------------------------------
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
 WORKDIR /
@@ -69,6 +62,10 @@ RUN     python setup.py install
 WORKDIR /
 RUN     rm -rf auxil-1.1/
 RUN     rm auxil-1.1.tar.gz
+
+# ipython notebook
+#RUN     pip install "ipython[notebook]"
+RUN     pip install jupyter
 
 # enable parallel computing
 RUN     pip install ipyparallel
@@ -104,7 +101,7 @@ COPY    utm.prj /sar/utm.prj
 COPY    radarsat2quadpol.template /sar/radarsat2quadpol.template
 COPY    terrasarxdualpol.template /sar/terrasarxdualpol.template
 
-COPY    tutorial.ipynb /sar/tutorial.ipynb 
+#COPY    tutorialnew.ipynb /sar/tutorial.ipynb 
 
 COPY    gamma_filter.py /sar/gamma_filter.py
 

@@ -78,11 +78,13 @@ def main():
     usage = '''
 Usage:
 ------------------------------------------------
-    python %s [-h] [-d dims] [-s significance] [-m] infile1,infile2,...,infilen outfn enl
-                  (infiles are comma-separated, no blank spaces)
-                  outfn is without path (written to same directory as infile1)
+    python %s [-h] [-d dims] [-s significance] [-m] infile_1,infile_2,...,infile_n outfilename enl
     
-    Perform change detection on multi-temporal, polarimetric SAR imagery.
+    Perform change detection on multi-temporal, polarimetric SAR imagery in covariance or 
+    coherency matrix format.
+    
+                  (infiles are comma-separated, no blank spaces)
+                  outfilename is without path (will be written to same directory as infile_1)
 --------------------------------------------'''%sys.argv[0]
 
     options,args = getopt.getopt(sys.argv[1:],'hmd:s:')
@@ -107,6 +109,7 @@ Usage:
     outfn = args[1]
     m = np.float64(eval(args[2])) # equivalent number of looks
     n = np.float64(len(fns))      # number of images
+    eps = sys.float_info.min
     print '==============================================='
     print 'Multi-temporal Complex Wishart Change Detection'
     print '==============================================='
@@ -140,6 +143,7 @@ Usage:
     sumlogdet = 0.0
     k = 0.0; a = 0.0; rho = 0.0; xsi = 0.0; b = 0.0; zeta = 0.0
     for fn in fns:
+        print 'ingesting: %s'%fn
         result = getmat(fn,x0,y0,cols,rows,bands)
         if p==3:
             k1,a1,rho1,xsi1,b1,zeta1 = result
@@ -165,7 +169,7 @@ Usage:
         x0 = 0 # subsequent files are warped to cols x rows
         y0 = 0           
         idx = np.where(det1 <= 0.0)
-        det1[idx] = 0.0000001 
+        det1[idx] = eps 
         sumlogdet += np.log(det1) 
     if p==3: 
         detsum = k*xsi*zeta + 2*np.real(a*b*np.conj(rho)) - xsi*(abs(rho)**2) - k*(abs(b)**2) - zeta*(abs(a)**2) 
@@ -174,7 +178,7 @@ Usage:
     elif p==1:
         detsum = k  
     idx = np.where(detsum <= 0.0)
-    detsum[idx] = 0.0000001 
+    detsum[idx] = eps 
     logdetsum = np.log(detsum)
     lnQ = m*(p*n*np.log(n) + sumlogdet - n*logdetsum)
     f =(n-1)*p**2
@@ -198,8 +202,8 @@ Usage:
     c11 = np.where(P>(1.0-significance),a0,c11)      
     cmap = np.where(P>(1.0-significance),a255,c11)
 #  write to file system        
-#    driver = inDataset1.GetDriver()  
-    driver = gdal.GetDriverByName('ENVI')  
+    driver = inDataset1.GetDriver()  
+#    driver = gdal.GetDriverByName('ENVI')  
     outDataset = driver.Create(outfn,cols,rows,2,GDT_Float32)
     geotransform = inDataset2.GetGeoTransform()
     if geotransform is not None:
@@ -237,8 +241,8 @@ Usage:
     outDataset = None    
     inDataset1 = None
     inDataset2 = None
-    print 'elapsed time: '+str(time.time()-start) 
     print 'change map image written to: %s'%outfn  
+    print 'elapsed time: '+str(time.time()-start)     
 # # test against Matlab   
 #     fn = '/home/mort/imagery/sar/emisar/m2rlnQ63646568'
 #     inDatasetx = gdal.Open(fn,GA_ReadOnly) 

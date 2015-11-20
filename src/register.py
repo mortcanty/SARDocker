@@ -51,7 +51,7 @@ def register(file0, file1, dims=None, outfile=None):
         cols = inDataset0.RasterXSize
         rows = inDataset0.RasterYSize
         bands = inDataset0.RasterCount
-        print 'Reference image: %s' % file0   
+        print 'Reference image:\n %s' % file0   
         if dims == None:
             dims = [0,0,cols,rows]
         x0,y0,cols,rows = dims 
@@ -60,7 +60,7 @@ def register(file0, file1, dims=None, outfile=None):
         cols1 = inDataset1.RasterXSize
         rows1 = inDataset1.RasterYSize  
         bands1 = inDataset1.RasterCount
-        print 'Target image: %s' % file1      
+        print 'Target image:\n %s' % file1      
         if  bands != bands1:
             print 'Number of bands must be equal'
             return 0
@@ -195,8 +195,7 @@ Usage:
     fn0 = args[0]
     fn1 = args[1]
     outfile = register(fn0,fn1,dims)
-    if outfile is not None:
-        print 'Warped image written to: %s' % outfile  
+    print 'Warped image written to: %s' % outfile  
 
 if __name__ == '__main__':
     main()    

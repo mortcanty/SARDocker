@@ -4,7 +4,7 @@
 #  Purpose: ;    gamma MAP adaptive filtering for polarized SAR intensity images
 #            Ref: Oliver and Quegan (2004) Understanding SAR Images, Scitech 
 #  Usage:             
-#    python gamma_filter.py [-h] [-d dims] infile enl
+#    python gamma_filter.py [-h] [-p] [-d dims] infile enl
 #
 #  Copyright (c) 2015, Mort Canty
 #    This program is free software; you can redistribute it and/or modify
@@ -120,6 +120,7 @@ def main():
     python %s [-h] [-p] [-d dims] filename enl
     
     Run a gamma MAP filter in the diagonal elements of a C or T matrix
+     Set flag -p for parallel execution on (at least 2) IPython engines
     ------------------------------------------------''' %sys.argv[0]
     options,args = getopt.getopt(sys.argv[1:],'hpd:')
     dims = None

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Usage:
+# Usage: 
 #
 #  ./omnibus.sh yyyymmdd1 ... yyyymmddn dims enl significance
 
@@ -33,7 +33,9 @@ for ((i=1; i<$n; i++))
 do  
     dir=$imdir$(ls -l $imdir | grep 'MapReady$' | grep $1 | awk '{print $9}')$subdir
     fn2=$dir'polSAR.tif'
-    fn[i]=$(python /sar/register.py -d $dims $fn1 $fn2 | tee /dev/tty | grep written | awk '{print $5}')
+    fni=$(python /sar/register.py -d $dims $fn1 $fn2 | tee /dev/tty | grep written | awk '{print $5}')
+    [[ $fni = None ]] && exit 1
+    fn[i]=$fni
     shift  
 done
 
