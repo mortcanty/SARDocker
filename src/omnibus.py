@@ -201,10 +201,11 @@ Usage:
     c11 = np.where(c11>255,a255,c11) 
     c11 = np.where(P>(1.0-significance),a0,c11)      
     cmap = np.where(P>(1.0-significance),a255,c11)
+    cmap0 = np.where(P>(1.0-significance),a255,a0)
 #  write to file system        
     driver = inDataset1.GetDriver()  
 #    driver = gdal.GetDriverByName('ENVI')  
-    outDataset = driver.Create(outfn,cols,rows,2,GDT_Float32)
+    outDataset = driver.Create(outfn,cols,rows,3,GDT_Float32)
     geotransform = inDataset2.GetGeoTransform()
     if geotransform is not None:
         outDataset.SetGeoTransform(geotransform)
@@ -216,9 +217,12 @@ Usage:
     outBand.FlushCache() 
     outBand = outDataset.GetRasterBand(2)
     outBand.WriteArray(P,0,0) 
+    outBand.FlushCache() 
+    outBand = outDataset.GetRasterBand(3)
+    outBand.WriteArray(cmap0,0,0) 
     outBand.FlushCache()     
     outDataset = None
-    print 'test statistic and change probabilities written to: %s'%outfn 
+    print 'test statistic, change probabilities and change map written to: %s'%outfn 
     basename = os.path.basename(outfn)
     name, ext = os.path.splitext(basename)
     outfn=outfn.replace(name,name+'_cmap')
