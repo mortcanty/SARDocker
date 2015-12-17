@@ -57,7 +57,7 @@ ENV     SCRIPTS_CHANGED 2015-12-15
 #---------------------------------
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
 WORKDIR /
-RUN     tar -xzvf auxil-1.1.tar.gzparalle
+RUN     tar -xzvf auxil-1.1.tar.gz
 WORKDIR /auxil-1.1
 RUN     python setup.py install  
 WORKDIR /
