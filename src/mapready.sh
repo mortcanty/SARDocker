@@ -7,13 +7,13 @@ echo 'Geocoding polSARpro multilook polarimetric matrix image with mapready ...'
 #
 # platform: rs2quad, tsxdual
 
-imdir='/sar/imagery/'
+imdir='/home/imagery/'
 
 if [ $2 == 'rs2quad' ] 
 then 
 # prepare the MapReady configuration file
 	basename=$imdir$(ls -l $imdir | grep 'RS2_OK' | grep '_SLC$' | grep $1 | awk '{print $9}') 
-    sed 's:basename:'$basename':g' /sar/radarsat2quadpol.template > /sar/mapready.cfg
+    sed 's:basename:'$basename':g' /home/radarsat2quadpol.template > /home/mapready.cfg
 # Edit the first ENVI header in the PolSARPro directory
 	pspdir=$basename'/polsarpro/T3'	
 	if [[ $(cat $pspdir/T11.bin.hdr | grep 'description' | grep '}$') ]]
@@ -35,7 +35,7 @@ then
 # prepare the MapReady configuration file
     basename=$imdir$(ls -l $imdir | grep 'TSX$' | grep $1 | awk '{print $9}')
 	ancillary=$basename'/'$(ls -l $basename | grep $1 | awk '{print $9}')
-	sed -e 's:basename:'$basename':g' -e 's:auxil:'$ancillary':g' /sar/terrasarxdualpol.template > /sar/mapready.cfg
+	sed -e 's:basename:'$basename':g' -e 's:auxil:'$ancillary':g' /home/terrasarxdualpol.template > /home/mapready.cfg
 # Edit the first ENVI header in the PolSARPro directory
 	pspdir=$basename'/polsarpro/C2'
 	if [[ $(cat $pspdir/C11.bin.hdr | grep 'description' | grep '}$') ]]
@@ -54,7 +54,7 @@ then
 	echo 'Range looks:   '$((cols0/cols))	
 fi
 
-cd /sar
+cd /home
     
 echo '***** processing polSARpro polarimetric matrix image:'
 
@@ -73,4 +73,4 @@ dir=$imdir$(ls -l $imdir | grep 'MapReady$' | grep $1 | awk '{print $9}')
 subdir='/'$(ls -l $dir | grep [CT][23] | awk '{print $9}')'/'
 
 dir=$imdir$(ls -l $imdir | grep 'MapReady$' | grep $1 | awk '{print $9}')$subdir
-fn=$dir$(python /sar/ingest.py $dir | tee /dev/tty | grep 'written' | awk '{print $5}')
+fn=$dir$(python /home/ingest.py $dir | tee /dev/tty | grep 'written' | awk '{print $5}')

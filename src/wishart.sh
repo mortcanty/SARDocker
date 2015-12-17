@@ -7,7 +7,7 @@
 echo '***** Bitemporal PolSAR Change Detection'
 echo ' '
 
-imdir='/sar/imagery/'
+imdir='/home/imagery/'
 
 # test for T3 (quadpol) or C2 (dualpol) directory
 dir=$imdir$(ls -l $imdir | grep 'MapReady$' | grep $1 | awk '{print $9}')
@@ -20,10 +20,10 @@ fn2=$dir'polSAR.tif'
 
 echo '***** registering ...'
 
-fn2=$(python /sar/register.py -d $3 $fn1 $fn2 | tee /dev/tty | grep written | awk '{print $5}')
+fn2=$(python /home/register.py -d $3 $fn1 $fn2 | tee /dev/tty | grep written | awk '{print $5}')
 
 outfn='wishart('$1'-'$2').tif'
 
 echo '***** complex Wishart change detection ...'
 
-python /sar/wishart.py -d $3 $fn1 $fn2 $outfn $4 $5 
+python /home/wishart.py -d $3 $fn1 $fn2 $outfn $4 $5 

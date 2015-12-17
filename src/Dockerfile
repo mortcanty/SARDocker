@@ -1,7 +1,7 @@
 FROM     debian:jessie
 MAINTAINER Mort Canty "mort.canty@gmail.com"
 
-ENV    IMAGE REFRESHED_AT 2015-11-13
+ENV    IMAGE REFRESHED_AT 2015-12-10
 #------------------------------
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dos2unix \
     python-dev \
     python-pygments \
+    python-zmq \
     python-pip 
 
 # install python environment for crc scripts
@@ -26,8 +27,8 @@ RUN     apt-get install -y --no-install-recommends \
 RUN     apt-get install -y --no-install-recommends python-tk
 
 # setup the prov_means library
-COPY    prov_means.c /sar/prov_means.c
-WORKDIR /sar
+COPY    prov_means.c /home/prov_means.c
+WORKDIR /home
 RUN     gcc -shared -Wall -g -o libprov_means.so -fPIC prov_means.c
 RUN     cp libprov_means.so /usr/lib/libprov_means.so
 
@@ -52,11 +53,11 @@ RUN     ./install_asf.sh
 WORKDIR /
 RUN     rm mapready-3.2.1-src.tar.gz
 
-ENV     SCRIPTS_CHANGED 2015-11-20
+ENV     SCRIPTS_CHANGED 2015-12-15
 #---------------------------------
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
 WORKDIR /
-RUN     tar -xzvf auxil-1.1.tar.gz
+RUN     tar -xzvf auxil-1.1.tar.gzparalle
 WORKDIR /auxil-1.1
 RUN     python setup.py install  
 WORKDIR /
@@ -83,27 +84,29 @@ EXPOSE 8888
 
 # add the Python scripts and set the startup command
 
-COPY    dispms.py /sar/dispms.py
-COPY    ingest.py /sar/ingest.py
-COPY    register.py /sar/register.py
-COPY    enlml.py /sar/enlml.py
-COPY    wishart.py /sar/wishart.py
-COPY    omnibus.py /sar/omnibus.py
+COPY    dispms.py /home/dispms.py
+COPY    ingest.py /home/ingest.py
+COPY    register.py /home/register.py
+COPY    enlml.py /home/enlml.py
+COPY    wishart.py /home/wishart.py
+COPY    omnibus.py /home/omnibus.py
 
-COPY    mapready.sh /sar/mapready.sh
-COPY    wishart.sh /sar/wishart.sh
-COPY    omnibus.sh /sar/omnibus.sh
-RUN     chmod u+x /sar/mapready.sh
-RUN     chmod u+x /sar/wishart.sh
-RUN     chmod u+x /sar/omnibus.sh
+COPY    mapready.sh /home/mapready.sh
+COPY    wishart.sh /home/wishart.sh
+COPY    omnibus.sh /home/omnibus.sh
+COPY    omnibus_s1.sh /home/omnibus_s1.sh
+RUN     chmod u+x /home/mapready.sh
+RUN     chmod u+x /home/wishart.sh
+RUN     chmod u+x /home/omnibus.sh
+RUN     chmod u+x /home/omnibus_s1.sh
 
-COPY    utm.prj /sar/utm.prj
-COPY    radarsat2quadpol.template /sar/radarsat2quadpol.template
-COPY    terrasarxdualpol.template /sar/terrasarxdualpol.template
+COPY    utm.prj /home/utm.prj
+COPY    radarsat2quadpol.template /home/radarsat2quadpol.template
+COPY    terrasarxdualpol.template /home/terrahomexdualpol.template
 
-COPY    tutorial.ipynb /sar/tutorial.ipynb 
+COPY    tutorial.ipynb /home/tutorial.ipynb 
 
-COPY    gamma_filter.py /sar/gamma_filter.py
+COPY    gamma_filter.py /home/gamma_filter.py
 
-WORKDIR /sar  
+WORKDIR /home  
 CMD     ["/notebook.sh"]

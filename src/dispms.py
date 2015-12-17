@@ -25,19 +25,6 @@ import numpy as np
 from osgeo.gdalconst import GA_ReadOnly
 
 def make_image(redband,greenband,blueband,rows,cols,enhance):
-    if str(redband.dtype) == 'uint8':
-        dt = 1
-    elif str(redband.dtype) == 'uint16':
-        dt = 2
-    elif str(redband.dtype) == 'int16':
-        dt = 2        
-    elif str(redband.dtype) == 'float32':
-        dt = 4
-    elif str(redband.dtype) == 'float64':
-        dt = 6
-    else:
-        print 'Unrecognized format'
-        return   
     X = np.zeros((rows*cols,3),dtype=np.uint8)  
     if enhance == 'linear255':
         i = 0
@@ -79,6 +66,9 @@ def make_image(redband,greenband,blueband,rows,cols,enhance):
             while cdf[j] > 0.98*cdf[-1]:
                 upper -= 1
                 j -= 1
+            if upper==0:
+                upper = 255
+                print 'Saturated stretch failed'
             fp = (bin_edges-lower)*255/(upper-lower) 
             fp = np.where(bin_edges<=lower,0,fp)
             fp = np.where(bin_edges>=upper,255,fp)
