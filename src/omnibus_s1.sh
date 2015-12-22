@@ -30,7 +30,7 @@ shift
 for ((i=1; i<$n; i++))
 do  
     fn2=$(ls -l $imdir | grep $1 | grep -v "enl" | grep -v "warp" | grep -v "cmap" | grep -v "omnibus" | awk '{print $9}' )
-    fni=$(python /sar/register.py -d $dims $fn1 $fn2 | tee /dev/tty | grep written | awk '{print $5}')
+    fni=$(python /home/register.py -d $dims $fn1 $fn2 | tee /dev/tty | grep written | awk '{print $5}')
     [[ $fni = None ]] && exit 1
     fn[i]=$fni
     shift  
@@ -38,4 +38,4 @@ done
 
 s="$fn1 ${fn[*]}"
 fns=${s//" "/","}
-python /sar/omnibus.py -d $dims -s $significance -m $fns  $outfn $enl 
+python /home/omnibus.py -d $dims -s $significance -m $fns  $outfn $enl 
