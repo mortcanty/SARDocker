@@ -1,4 +1,9 @@
-FROM     debian:jessie
+# x86 architecture 
+FROM     debian:jessie  
+           
+# arm (raspberry pi) architecture       
+#FROM     resin/rpi-raspbian 
+
 MAINTAINER Mort Canty "mort.canty@gmail.com"
 
 ENV    IMAGE REFRESHED_AT 2015-12-10

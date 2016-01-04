@@ -23,7 +23,7 @@ echo 'number of images ' $n
 echo 'ENL              ' $enl
 echo 'spatial subset   ' $dims
 
-imdir='/home/imagery/sentinelcamargue/'
+imdir='/home/imagery/'
 fn1=$(ls -l $imdir | grep $1 | grep -v "enl" | grep -v "warp" | grep -v "cmap" | grep -v "omnibus" | awk '{print $9}')
 shift
 
