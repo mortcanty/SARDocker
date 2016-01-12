@@ -19,7 +19,7 @@ dims=("${@: -3}")
 last=("${@: -4}")
 outfn='omnibus('$1'-'$nn'-'$last').tif'
 
-echo 'number of images ' $n
+echo 'number of images ' $n./build_
 echo 'ENL              ' $enl
 echo 'spatial subset   ' $dims
 

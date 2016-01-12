@@ -2,6 +2,8 @@
 #******************************************************************************
 #  Name:     omnibus.py
 #  Purpose:  Perform change detection on multi-temporal, polarimetric SAR imagery 
+#            Based on Allan Nielsen's Matlab script
+#            Condradsen et al. (2015) Accepted for IEEE Transactions on Geoscience and Remote Sensing
 #
 #  Usage:             
 #    python omnibus.py [-d dims] [-s significance] filenamelist enl

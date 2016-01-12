@@ -3,6 +3,8 @@
 #  Name:     wishart.py
 #  Purpose:  Perform change detection on bitemporal, polarimetric SAR imagery 
 #            Based on Allan Nielsen's Matlab script
+#            Condradsen et al. (2003) IEEE Transactions on Geoscience and Remote Sensing 41(1) 4-19
+#
 #  Usage:             
 #    python wishart.py [-d dims] [-s significance] file1 file2 outfile enl1 enl2
 #
