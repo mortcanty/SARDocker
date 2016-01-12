@@ -107,7 +107,7 @@ RUN     chmod u+x /home/omnibus_s1.sh
 
 COPY    utm.prj /home/utm.prj
 COPY    radarsat2quadpol.template /home/radarsat2quadpol.template
-COPY    terrasarxdualpol.template /home/terrahomexdualpol.template
+COPY    terrasarxdualpol.template /home/terrasarxdualpol.template
 
 COPY    tutorial.ipynb /home/tutorial.ipynb 
 
