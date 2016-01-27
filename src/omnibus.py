@@ -229,7 +229,6 @@ Usage:
     name, ext = os.path.splitext(basename)
     outfn=outfn.replace(name,name+'_cmap')
     outDataset = driver.Create(outfn,cols,rows,3,GDT_Byte)
-    geotransform = inDataset1.GetGeoTransform()
     if geotransform is not None:
         outDataset.SetGeoTransform(geotransform)
     projection = inDataset1.GetProjection()        
