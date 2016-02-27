@@ -55,6 +55,7 @@ def getmat(fn,x0,y0,cols,rows,bands):
 #      T33 (zeta1)
         b = inDataset1.GetRasterBand(9)
         zeta1 = b.ReadAsArray(x0,y0,cols,rows) 
+        inDataset1 = None
         return (k1,a1,rho1,xsi1,b1,zeta1)             
     elif bands == 4:
 #      C11 (k1)
@@ -69,11 +70,13 @@ def getmat(fn,x0,y0,cols,rows,bands):
 #      C22 (xsi1)
         b = inDataset1.GetRasterBand(4)
         xsi1 = b.ReadAsArray(x0,y0,cols,rows)  
+        inDataset1 = None
         return (k1,a1,xsi1)         
     elif bands == 1:        
 #      C11 (k1)
         b = inDataset1.GetRasterBand(1)
         k1 = b.ReadAsArray(x0,y0,cols,rows)  
+        inDataset1 = None
         return k1
                        
 def main():
@@ -85,7 +88,8 @@ Usage:
     Perform change detection on multi-temporal, polarimetric SAR imagery in covariance or 
     coherency matrix format.
     
-                  (infiles are comma-separated, no blank spaces)
+                  infiles are comma-separated, no blank spaces, dims applies to first infile,
+                  others are assumed warped to spatial dimension dims
                   outfilename is without path (will be written to same directory as infile_1)
 --------------------------------------------'''%sys.argv[0]
 

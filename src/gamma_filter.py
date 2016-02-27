@@ -24,12 +24,11 @@ from osgeo import gdal
 from osgeo.gdalconst import GDT_Float32, GA_ReadOnly
 from ipyparallel import Client
 
-def gamma_filter((k,inimage,outimage,rows,cols,m)):
-    import auxil.congrid as congrid
-    
-    def get_windex(j,cols):
+def gamma_filter((k,inimage,rows,cols,m)):
+    import auxil.congrid as congrid        
+    def get_windex(j,cols):     
         windex = np.zeros(49,dtype=int)
-        six = np.array([0,1,2,3,4,5,6])
+        six = np.array([0,1,2,3,4,5,6])      
         windex[0:7]   = (j-3)*cols + six
         windex[7:14]  = (j-2)*cols + six
         windex[14:21] = (j-1)*cols + six
@@ -67,8 +66,10 @@ def gamma_filter((k,inimage,outimage,rows,cols,m)):
     edges[3] = [[1,1,0],[1,0,-1],[0,-1,-1]]     
     
     result = np.copy(inimage[k])
-    arr = outimage[k].ravel()
+    arr = inimage[k].ravel()
     for j in range(3,rows-3):
+        if j%50 == 0:
+            print 'band %i  row %i'%((k+1),j)
         windex = get_windex(j,cols)
         for i in range(3,cols-3):
 #          central pixel, always from original input image
@@ -173,7 +174,6 @@ def main():
     else:
         outDataset = driver.Create(outfile,cols,rows,1,GDT_Float32)
         inimage = inDataset.GetRasterBand(1)  
-    outimage = np.copy(inimage)
     print '========================='
     print '    GAMMA MAP FILTER'
     print '========================='
@@ -191,24 +191,24 @@ def main():
     if bands == 9:      
         print 'filtering 3 diagonal matrix element bands ...'   
         if parallel:    
-            outimage = v.map_sync(gamma_filter,[(0,inimage,outimage,rows,cols,m),
-                                                (1,inimage,outimage,rows,cols,m),
-                                                (2,inimage,outimage,rows,cols,m)])
+            outimage = v.map_sync(gamma_filter,[(0,inimage,rows,cols,m),
+                                                (1,inimage,rows,cols,m),
+                                                (2,inimage,rows,cols,m)])
         else:
-            outimage = map(gamma_filter,[(0,inimage,outimage,rows,cols,m),
-                                         (1,inimage,outimage,rows,cols,m),
-                                         (2,inimage,outimage,rows,cols,m)])
+            outimage = map(gamma_filter,[(0,inimage,rows,cols,m),
+                                         (1,inimage,rows,cols,m),
+                                         (2,inimage,rows,cols,m)])
     elif bands == 4:
         print 'filtering 2 diagonal matrix element bands ...' 
         if parallel:
-            outimage = v.map_sync(gamma_filter,[(0,inimage,outimage,rows,cols,m),
-                                                (1,inimage,outimage,rows,cols,m)])
+            outimage = v.map_sync(gamma_filter,[(0,inimage,rows,cols,m),
+                                                (1,inimage,rows,cols,m)])
         else:
             outimage = map(gamma_filter,[(0,inimage,outimage,rows,cols,m),
-                                                (1,inimage,outimage,rows,cols,m)])
+                                                (1,inimage,rows,cols,m)])
     else:
         print 'filtering scalar image ...'
-        outimage = gamma_filter(0,inimage,outimage,rows,cols,m)                  
+        outimage = gamma_filter(0,inimage,rows,cols,m)                  
     geotransform = inDataset.GetGeoTransform()
     if geotransform is not None:
         gt = list(geotransform)

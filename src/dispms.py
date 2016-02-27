@@ -20,12 +20,13 @@
 import sys, getopt, os
 from osgeo import gdal
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 import  auxil.auxil as auxil 
 import numpy as np
 from osgeo.gdalconst import GA_ReadOnly
 
 def make_image(redband,greenband,blueband,rows,cols,enhance):
-    X = np.zeros((rows*cols,3),dtype=np.uint8)  
+    X = np.ones((rows*cols,3),dtype=np.uint8) 
     if enhance == 'linear255':
         i = 0
         for tmp in [redband,greenband,blueband]:
@@ -40,7 +41,8 @@ def make_image(redband,greenband,blueband,rows,cols,enhance):
             tmp = tmp.ravel()  
             mx = np.max(tmp)
             mn = np.min(tmp)  
-            tmp = (tmp-mn)*255.0/(mx-mn)
+            if mx-mn > 0:
+                tmp = (tmp-mn)*255.0/(mx-mn)    
             tmp = np.where(tmp<0,0,tmp)  
             tmp = np.where(tmp>255,255,tmp)
             X[:,i] = np.byte(tmp)
@@ -51,7 +53,8 @@ def make_image(redband,greenband,blueband,rows,cols,enhance):
             tmp = tmp.ravel()        
             mx = np.max(tmp)
             mn = np.min(tmp)  
-            tmp = (tmp-mn)*255.0/(mx-mn)
+            if mx-mn > 0:
+                tmp = (tmp-mn)*255.0/(mx-mn)  
             tmp = np.where(tmp<0,0,tmp)  
             tmp = np.where(tmp>255,255,tmp)
             hist,bin_edges = np.histogram(tmp,256,(0,256))
@@ -80,7 +83,8 @@ def make_image(redband,greenband,blueband,rows,cols,enhance):
             tmp = tmp.ravel()    
             mx = np.max(tmp)
             mn = np.min(tmp)  
-            tmp = (tmp-mn)*255.0/(mx-mn)
+            if mx-mn > 0:
+                tmp = (tmp-mn)*255.0/(mx-mn)  
             tmp = np.where(tmp<0,0,tmp)  
             tmp = np.where(tmp>255,255,tmp)  
             hist,bin_edges = np.histogram(tmp,256,(0,256)) 
@@ -97,17 +101,19 @@ def make_image(redband,greenband,blueband,rows,cols,enhance):
                 tmp = tmp - mn
             idx = np.where(tmp == 0)
             tmp[idx] = np.mean(tmp)
-            tmp = np.log(tmp) 
+            idx = np.where(tmp > 0)
+            tmp[idx] = np.log(tmp[idx]) 
             mn =np.min(tmp)
             mx = np.max(tmp)
-            tmp =(tmp-mn)*255.0/(mx-mn)  
+            if mx-mn > 0:
+                tmp = (tmp-mn)*255.0/(mx-mn)    
             tmp = np.where(tmp<0,0,tmp)  
             tmp = np.where(tmp>255,255,tmp)
             X[:,i] = np.byte(tmp) 
             i += 1                           
     return np.reshape(X,(rows,cols,3))/255.
 
-def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,enhance=None,ENHANCE=None,cls=False,CLS=False):
+def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,enhance=None,ENHANCE=None,cls=None,CLS=None,alpha=None):
     gdal.AllRegister()
     if filename1 == None:        
         filename1 = raw_input('Enter image filename: ')
@@ -153,18 +159,17 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
     else:
         enhance = 'linear2pc' 
     try:  
-        if not cls:
+        if cls is None:
             redband   = np.nan_to_num(inDataset1.GetRasterBand(r).ReadAsArray(x0,y0,cols,rows)) 
             greenband = np.nan_to_num(inDataset1.GetRasterBand(g).ReadAsArray(x0,y0,cols,rows)) 
             blueband  = np.nan_to_num(inDataset1.GetRasterBand(b).ReadAsArray(x0,y0,cols,rows))
         else:
             classimg = inDataset1.GetRasterBand(1).ReadAsArray(x0,y0,cols,rows).ravel()
-            ctable = np.reshape(auxil.ctable,(18,3))
-            classes = range(1,np.max(classimg)+1)
+            ctable = np.reshape(auxil.ctable,(11,3))
             redband = classimg*0
             greenband = classimg*0
             blueband = classimg*0
-            for k in classes:
+            for k in cls:
                 idx = np.where(classimg==k)
                 redband[idx] = ctable[k,0]
                 greenband[idx] = ctable[k,1]
@@ -179,6 +184,7 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
     X1 = make_image(redband,greenband,blueband,rows,cols,enhance1)
     if filename2 is not None:
         if DIMS == None:
+            
             DIMS = [0,0,cols2,rows2]
         x0,y0,cols,rows = DIMS
         if RGB == None:
@@ -187,6 +193,7 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
         r = int(np.min([r,bands2]))
         g = int(np.min([g,bands2]))
         b = int(np.min([b,bands2]))
+        
         enhance = ENHANCE
         if enhance == None:
             enhance = 5
@@ -203,18 +210,17 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
         else:
             enhance = 'logarithmic'          
         try:  
-            if not CLS:
+            if CLS is None:
                 redband   = np.nan_to_num(inDataset2.GetRasterBand(r).ReadAsArray(x0,y0,cols,rows))
                 greenband = np.nan_to_num(inDataset2.GetRasterBand(g).ReadAsArray(x0,y0,cols,rows)) 
                 blueband  = np.nan_to_num(inDataset2.GetRasterBand(b).ReadAsArray(x0,y0,cols,rows))
             else:
                 classimg = inDataset2.GetRasterBand(1).ReadAsArray(x0,y0,cols,rows).ravel()
-                ctable = np.reshape(auxil.ctable,(18,3))
-                classes = range(1,np.max(classimg)+1)
+                ctable = np.reshape(auxil.ctable,(11,3))
                 redband = classimg*0
                 greenband = classimg*0
                 blueband = classimg*0
-                for k in classes:
+                for k in CLS:
                     idx = np.where(classimg==k)
                     redband[idx] = ctable[k,0]
                     greenband[idx] = ctable[k,1]
@@ -226,27 +232,47 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
         except  Exception as e:
             print 'Error in dispms: %s'%e  
             return
-        X2 = make_image(redband,greenband,blueband,rows,cols,enhance2)    
-        f, ax = plt.subplots(1,2,figsize=(20,10))
-        ax[0].imshow(X1)
-        ax[0].set_title('%s: %s: %s:  %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims)))
-        ax[1].imshow(X2)
-        ax[1].set_title('%s: %s: %s: %s\n'%(os.path.basename(filename2),enhance2, str(RGB), str(DIMS)))
+        X2 = make_image(redband,greenband,blueband,rows,cols,enhance2)  
+        if alpha is not None:
+            f, ax = plt.subplots(figsize=(10,10)) 
+            ax.imshow(X1)
+            ax.imshow(X2,alpha=alpha)
+            ax.set_title('%s: %s: %s: %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims)))
+        else:    
+            f, ax = plt.subplots(1,2,figsize=(20,10))
+            ax[0].imshow(X1)
+            ax[0].set_title('%s: %s: %s:  %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims)))
+            ax[1].imshow(X2)
+            ax[1].set_title('%s: %s: %s: %s\n'%(os.path.basename(filename2),enhance2, str(RGB), str(DIMS)))
     else:
         f, ax = plt.subplots(figsize=(10,10))
-        ax.imshow(X1)
+        if cls is not None:
+            cmap = colors.ListedColormap(ctable/255.)
+            ticks = range(len(ctable[:,0]))
+            tickspos = map(lambda x: x/11.,ticks)
+            cax = ax.imshow(X1,cmap=cmap)        
+            cbar = f.colorbar(cax,ticks=tickspos,orientation='horizontal')
+            cbar.ax.set_xticklabels(map(str,ticks))
+            cbar.ax.set_title('last change or change frequency')
+        else:
+            ax.imshow(X1)    
         ax.set_title('%s: %s: %s: %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims))) 
     plt.show()
                       
 
 def main():
-    usage = '''Usage: python %s [-c] [-C] [-f filename1] [-F filename2] [-p posf] [P posF [-d dimsf] [-D dimsF]\n
-                                        [-e enhancementf] [-E enhancement]\n
+    usage = '''Usage: python %s [-h] [-c classes] [-C Classes] \n
+            [-l] [-L] [-o alpha] \n
+            [-e enhancementf] [-E enhancementF]\n
+            [-p posf] [P posF [-d dimsf] [-D dimsF]\n
+            [-f filename1] [-F filename2] \n
+                                        
             if -f is not specified it will be queried\n
-            use -c or -C for classification image\n 
+            use -c classes and/or -C Classes for classification image\n 
+            use -o alpha to overlay right onto left image with transparency alpha
             RGB bandPositions and spatialDimensions are lists, e.g., -p [1,4,3] -d [0,0,400,400] \n
             enhancements: 1=linear255 2=linear 3=linear2pc 4=equalization 5=logarithmic\n'''%sys.argv[0]
-    options,args = getopt.getopt(sys.argv[1:],'hcCf:F:p:P:d:D:e:E:')
+    options,args = getopt.getopt(sys.argv[1:],'hc:o:C:f:F:p:P:d:D:e:E:')
     filename1 = None
     filename2 = None
     dims = None
@@ -255,12 +281,15 @@ def main():
     RGB = None
     enhance = None   
     ENHANCE = None
-    cls = False
-    CLS = False
+    alpha = None
+    cls = None
+    CLS = None
     for option, value in options: 
         if option == '-h':
             print usage
             return 
+        elif option =='-o':
+            alpha = eval(value)
         elif option == '-f':
             filename1 = value
         elif option == '-F':
@@ -278,11 +307,11 @@ def main():
         elif option == '-E':
             ENHANCE = eval(value)    
         elif option == '-c':
-            cls = True  
+            cls = eval(value)  
         elif option == '-C':
-            CLS = True                
+            CLS = eval(value)                
                     
-    dispms(filename1,filename2,dims,DIMS,rgb,RGB,enhance,ENHANCE,cls,CLS)
+    dispms(filename1,filename2,dims,DIMS,rgb,RGB,enhance,ENHANCE,cls,CLS,alpha)
 
 if __name__ == '__main__':
     main()

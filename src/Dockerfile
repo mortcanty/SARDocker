@@ -58,7 +58,19 @@ RUN     ./install_asf.sh
 WORKDIR /
 RUN     rm mapready-3.2.1-src.tar.gz
 
-ENV     SCRIPTS_CHANGED 2016-01.27
+
+# ipython notebook
+RUN     pip install "ipython[notebook]"
+#RUN     pip install jupyter
+
+# enable parallel computing
+RUN     pip install ipyparallel
+RUN     jupyter notebook --generate-config
+RUN     sed -i "/# Configuration file for jupyter-notebook./a  \ 
+                c.NotebookApp.server_extensions.append('ipyparallel.nbextension')" \
+            /root/.jupyter/jupyter_notebook_config.py
+            
+ENV     SCRIPTS_CHANGED 2016-02-26
 #---------------------------------
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
 WORKDIR /
@@ -69,17 +81,6 @@ WORKDIR /
 RUN     rm -rf auxil-1.1/
 RUN     rm auxil-1.1.tar.gz
 
-# ipython notebook
-#RUN     pip install "ipython[notebook]"
-RUN     pip install jupyter
-
-# enable parallel computing
-RUN     pip install ipyparallel
-RUN     jupyter notebook --generate-config
-RUN     sed -i "/# Configuration file for jupyter-notebook./a  \ 
-                c.NotebookApp.server_extensions.append('ipyparallel.nbextension')" \
-            /root/.jupyter/jupyter_notebook_config.py
-
 # ipython notebook startup script 
 ADD     notebook.sh  /
 RUN     chmod u+x /notebook.sh
@@ -88,22 +89,27 @@ RUN     dos2unix /notebook.sh
 EXPOSE 8888
 
 # add the Python scripts and set the startup command
-
 COPY    dispms.py /home/dispms.py
 COPY    ingest.py /home/ingest.py
 COPY    register.py /home/register.py
 COPY    enlml.py /home/enlml.py
 COPY    wishart.py /home/wishart.py
 COPY    omnibus.py /home/omnibus.py
+COPY    subset.py /home/subset.py
+COPY    sar_seq.py /home/sar_seq.py
 
 COPY    mapready.sh /home/mapready.sh
 COPY    wishart.sh /home/wishart.sh
 COPY    omnibus.sh /home/omnibus.sh
 COPY    omnibus_s1.sh /home/omnibus_s1.sh
+COPY    sar_seq.sh /home/sar_seq.sh
+COPY    sar_seq_s1.sh /home/sar_seq_s1.sh
 RUN     chmod u+x /home/mapready.sh
 RUN     chmod u+x /home/wishart.sh
 RUN     chmod u+x /home/omnibus.sh
 RUN     chmod u+x /home/omnibus_s1.sh
+RUN     chmod u+x /home/sar_seq.sh
+RUN     chmod u+x /home/sar_seq_s1.sh
 
 COPY    utm.prj /home/utm.prj
 COPY    radarsat2quadpol.template /home/radarsat2quadpol.template
