@@ -141,10 +141,10 @@ def register(file0, file1, dims=None, outfile=None):
                 outBand.WriteArray(bn)
                 outBand.FlushCache()           
         elif bands == 1:
-     #      get warp parameters using span images         
+    #      get warp parameters using span images         
             print 'warping 1 band (single pol)...' 
             span0 = np.log(np.nan_to_num(span0)+0.001)                                   
-            span1 = np.log(np.nan_to_num(span0)+0.001)                           
+            span1 = np.log(np.nan_to_num(span1)+0.001)                           
             scale, angle, shift = auxil.similarity(span0, span1)   
     #      warp the target to the reference and clip
             for k in range(1): 

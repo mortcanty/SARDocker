@@ -100,16 +100,35 @@ def make_image(redband,greenband,blueband,rows,cols,enhance):
             if mn < 0:
                 tmp = tmp - mn
             idx = np.where(tmp == 0)
-            tmp[idx] = np.mean(tmp)
+            tmp[idx] = np.mean(tmp)  # get rid of black edges
             idx = np.where(tmp > 0)
-            tmp[idx] = np.log(tmp[idx]) 
+            tmp[idx] = np.log(tmp[idx])            
             mn =np.min(tmp)
             mx = np.max(tmp)
             if mx-mn > 0:
                 tmp = (tmp-mn)*255.0/(mx-mn)    
             tmp = np.where(tmp<0,0,tmp)  
             tmp = np.where(tmp>255,255,tmp)
-            X[:,i] = np.byte(tmp) 
+ #         2% linear stretch           
+            hist,bin_edges = np.histogram(tmp,256,(0,256))
+            cdf = hist.cumsum()
+            lower = 0
+            j = 0
+            while cdf[j] < 0.02*cdf[-1]:
+                lower += 1
+                j += 1
+            upper = 255    
+            j = 255
+            while cdf[j] > 0.98*cdf[-1]:
+                upper -= 1
+                j -= 1
+            if upper==0:
+                upper = 255
+                print 'Saturated stretch failed'
+            fp = (bin_edges-lower)*255/(upper-lower) 
+            fp = np.where(bin_edges<=lower,0,fp)
+            fp = np.where(bin_edges>=upper,255,fp)
+            X[:,i] = np.byte(np.interp(tmp,bin_edges,fp))
             i += 1                           
     return np.reshape(X,(rows,cols,3))/255.
 
@@ -245,16 +264,16 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
             ax[1].imshow(X2)
             ax[1].set_title('%s: %s: %s: %s\n'%(os.path.basename(filename2),enhance2, str(RGB), str(DIMS)))
     else:
-        f, ax = plt.subplots(figsize=(10,10))
         if cls is not None:
+            f, ax = plt.subplots(figsize=(15,10))
             cmap = colors.ListedColormap(ctable/255.)
             ticks = range(len(ctable[:,0]))
             tickspos = map(lambda x: x/11.,ticks)
             cax = ax.imshow(X1,cmap=cmap)        
-            cbar = f.colorbar(cax,ticks=tickspos,orientation='horizontal')
-            cbar.ax.set_xticklabels(map(str,ticks))
-            cbar.ax.set_title('last change or change frequency')
+            cbar = f.colorbar(cax,ticks=tickspos,orientation='vertical',shrink=0.7)
+            cbar.ax.set_yticklabels(map(str,ticks))
         else:
+            f, ax = plt.subplots(figsize=(10,10))
             ax.imshow(X1)    
         ax.set_title('%s: %s: %s: %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims))) 
     plt.show()

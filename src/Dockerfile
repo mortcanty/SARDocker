@@ -1,5 +1,5 @@
 # x86 architecture 
-FROM     debian:jessie  
+FROM     debian:jessie 
            
 # arm (raspberry pi) architecture       
 #FROM     resin/rpi-raspbian 
@@ -68,9 +68,9 @@ RUN     pip install ipyparallel
 RUN     jupyter notebook --generate-config
 RUN     sed -i "/# Configuration file for jupyter-notebook./a  \ 
                 c.NotebookApp.server_extensions.append('ipyparallel.nbextension')" \
-            /root/.jupyter/jupyter_notebook_config.py
+                /root/.jupyter/jupyter_notebook_config.py
             
-ENV     SCRIPTS_CHANGED 2016-02-26
+ENV     SCRIPTS_CHANGED 2016-03-11
 #---------------------------------
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
 WORKDIR /
@@ -97,6 +97,7 @@ COPY    wishart.py /home/wishart.py
 COPY    omnibus.py /home/omnibus.py
 COPY    subset.py /home/subset.py
 COPY    sar_seq.py /home/sar_seq.py
+#COPY    start4engines.sh /home/start4engines.sh
 
 COPY    mapready.sh /home/mapready.sh
 COPY    wishart.sh /home/wishart.sh
@@ -104,12 +105,15 @@ COPY    omnibus.sh /home/omnibus.sh
 COPY    omnibus_s1.sh /home/omnibus_s1.sh
 COPY    sar_seq.sh /home/sar_seq.sh
 COPY    sar_seq_s1.sh /home/sar_seq_s1.sh
+COPY    sar_seq_tsx.sh /home/sar_seq_tsx.sh
 RUN     chmod u+x /home/mapready.sh
 RUN     chmod u+x /home/wishart.sh
 RUN     chmod u+x /home/omnibus.sh
 RUN     chmod u+x /home/omnibus_s1.sh
 RUN     chmod u+x /home/sar_seq.sh
 RUN     chmod u+x /home/sar_seq_s1.sh
+RUN     chmod u+x /home/sar_seq_tsx.sh
+#RUN     chmod u+x /home/start4engines.sh
 
 COPY    utm.prj /home/utm.prj
 COPY    radarsat2quadpol.template /home/radarsat2quadpol.template

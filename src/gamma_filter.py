@@ -17,15 +17,14 @@
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 
-import auxil.auxil as auxil
 import os, sys, time, getopt
 import numpy as np
 from osgeo import gdal
 from osgeo.gdalconst import GDT_Float32, GA_ReadOnly
 from ipyparallel import Client
 
-def gamma_filter((k,inimage,rows,cols,m)):
-    import auxil.congrid as congrid        
+def gamma_filter((k,inimage,rows,cols,m)):    
+    from scipy.ndimage import zoom   
     def get_windex(j,cols):     
         windex = np.zeros(49,dtype=int)
         six = np.array([0,1,2,3,4,5,6])      
@@ -67,16 +66,16 @@ def gamma_filter((k,inimage,rows,cols,m)):
     
     result = np.copy(inimage[k])
     arr = inimage[k].ravel()
+    zf = 3./7
     for j in range(3,rows-3):
         if j%50 == 0:
             print 'band %i  row %i'%((k+1),j)
         windex = get_windex(j,cols)
         for i in range(3,cols-3):
-#          central pixel, always from original input image
             g = inimage[k,j,i]            
             wind = np.reshape(arr[windex],(7,7))
-#          3x3 compression
-            w = congrid.congrid(wind,(3,3),method='linear',centre=True)
+#          3x3 compression             
+            w = zoom(wind,zf,order=1,prefilter=False)              
 #          get appropriate edge mask
             es = [np.sum(edges[p]*w) for p in range(4)]
             idx = np.argmax(es)  
@@ -139,7 +138,7 @@ def main():
         print usage
         sys.exit(1)        
     infile = args[0]
-    m = int(args[1])    
+    m = float(args[1])    
     gdal.AllRegister()                  
     inDataset = gdal.Open(infile,GA_ReadOnly)     
     cols = inDataset.RasterXSize
@@ -179,7 +178,7 @@ def main():
     print '========================='
     print time.asctime()
     print 'infile:  %s'%infile
-    print 'equivalent number of looks: %i'%m  
+    print 'equivalent number of looks: %f'%m  
     if parallel:
         print 'parallel processing requested'   
     start = time.time() 
@@ -204,8 +203,8 @@ def main():
             outimage = v.map_sync(gamma_filter,[(0,inimage,rows,cols,m),
                                                 (1,inimage,rows,cols,m)])
         else:
-            outimage = map(gamma_filter,[(0,inimage,outimage,rows,cols,m),
-                                                (1,inimage,rows,cols,m)])
+            outimage = map(gamma_filter,[(0,inimage,rows,cols,m),
+                                         (1,inimage,rows,cols,m)])
     else:
         print 'filtering scalar image ...'
         outimage = gamma_filter(0,inimage,rows,cols,m)                  
