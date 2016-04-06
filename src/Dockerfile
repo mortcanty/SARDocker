@@ -70,7 +70,7 @@ RUN     sed -i "/# Configuration file for jupyter-notebook./a  \
                 c.NotebookApp.server_extensions.append('ipyparallel.nbextension')" \
                 /root/.jupyter/jupyter_notebook_config.py
             
-ENV     SCRIPTS_CHANGED 2016-03-11
+ENV     SCRIPTS_CHANGED 2016-04-06
 #---------------------------------
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
 WORKDIR /

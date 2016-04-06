@@ -184,7 +184,8 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
             blueband  = np.nan_to_num(inDataset1.GetRasterBand(b).ReadAsArray(x0,y0,cols,rows))
         else:
             classimg = inDataset1.GetRasterBand(1).ReadAsArray(x0,y0,cols,rows).ravel()
-            ctable = np.reshape(auxil.ctable,(11,3))
+            lct = len(auxil.ctable)/3
+            ctable = np.reshape(auxil.ctable,(lct,3))
             redband = classimg*0
             greenband = classimg*0
             blueband = classimg*0
@@ -235,7 +236,8 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
                 blueband  = np.nan_to_num(inDataset2.GetRasterBand(b).ReadAsArray(x0,y0,cols,rows))
             else:
                 classimg = inDataset2.GetRasterBand(1).ReadAsArray(x0,y0,cols,rows).ravel()
-                ctable = np.reshape(auxil.ctable,(11,3))
+                lct = len(auxil.ctable)/3
+                ctable = np.reshape(auxil.ctable,(lct,3))
                 redband = classimg*0
                 greenband = classimg*0
                 blueband = classimg*0
@@ -267,11 +269,12 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
         if cls is not None:
             f, ax = plt.subplots(figsize=(15,10))
             cmap = colors.ListedColormap(ctable/255.)
-            ticks = range(len(ctable[:,0]))
-            tickspos = map(lambda x: x/11.,ticks)
+            ticks = range(lct)
+            tickspos = map(lambda x: 0.8*x/float(lct),ticks)
             cax = ax.imshow(X1,cmap=cmap)        
             cbar = f.colorbar(cax,ticks=tickspos,orientation='vertical',shrink=0.7)
-            cbar.ax.set_yticklabels(map(str,ticks))
+            cbar.set_ticks(tickspos)
+            cbar.set_ticklabels(map(str,ticks))
         else:
             f, ax = plt.subplots(figsize=(10,10))
             ax.imshow(X1)    

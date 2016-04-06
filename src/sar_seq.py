@@ -21,9 +21,33 @@
 
 import numpy as np
 from scipy import stats, ndimage
-import os, sys, time, getopt, gdal  
-from osgeo.gdalconst import GA_ReadOnly, GDT_Float32, GDT_Byte
+import os, sys, time, getopt
+from osgeo import gdal, osr
+from osgeo.gdalconst import GA_ReadOnly, GDT_Byte
 from tempfile import NamedTemporaryFile
+
+KLM = '''<?xml version="1.0" encoding="UTF-8"?>
+    <kml xmlns="http://www.opengis.net/kml/2.2">
+      <Folder>
+        <name>Ground Overlay</name>
+        <description>Change map overlay</description>
+        <GroundOverlay>
+          <name>Change map overlay</name>
+          <description>SAR change detection.</description>
+          <Icon>
+            _cmap_
+          </Icon>
+          <LatLonBox>
+            <north>_north_</north>
+            <south>_south_</south>
+            <east>_east_</east>
+            <west>_west</west>
+            <rotation>-0.0</rotation>
+          </LatLonBox>
+        </GroundOverlay>
+      </Folder>
+    </kml>
+'''
 
 def getmat(fn,cols,rows,bands):
 #  read 9- 4- or 1-band preprocessed polarimitric image files 
@@ -82,6 +106,41 @@ def getmat(fn,cols,rows,bands):
         return result
     except Exception as e:
         print 'Error: %s  -- Could not read file'%e
+        sys.exit(1)   
+        
+def footprint(fn):
+    try:
+        imageDataset = gdal.Open(fn,GA_ReadOnly)
+        cols = imageDataset.RasterXSize
+        rows = imageDataset.RasterYSize           
+        gt =   imageDataset.GetGeoTransform()
+        ulx = gt[0]  
+        uly = gt[3]
+        urx = gt[0] + cols*gt[1]
+        ury = gt[3] + cols*gt[4]
+        llx = gt[0]              + rows*gt[2]
+        lly = gt[3]              + rows*gt[5]
+        lrx = gt[0] + cols*gt[1] + rows*gt[2]
+        lry = gt[3] + cols*gt[4] + rows*gt[5]
+#      get image coordinate system       
+        old_cs = osr.SpatialReference()
+        old_cs.ImportFromWkt(imageDataset.GetProjection())
+#      create the lonlat coordinate system
+        new_cs = osr.SpatialReference()  
+        new_cs.SetWellKnownGeogCS('WGS84')       
+#      create a transform object to convert between coordinate systems
+        transform = osr.CoordinateTransformation(old_cs,new_cs)                                          
+#      get the bounding coordinates in lonlat (no elevation)
+        coords = []
+        coords.append(list(transform.TransformPoint(ulx,uly)[0:2]))      
+        coords.append(list(transform.TransformPoint(urx,ury)[0:2])) 
+        coords.append(list(transform.TransformPoint(llx,lly)[0:2]))
+        coords.append(list(transform.TransformPoint(lrx,lry)[0:2])) 
+#      get the klm LatLonBox dimensions
+        north = coords[0][1]; south = coords[2][1]; east = coords[1][0] ; west = coords[0][0] 
+        return tuple(coords), (north,south,east,west)   
+    except Exception as e:
+        print 'Error: %s  Could not get footprint'%e
         sys.exit(1)   
     
 def CI(fns,n,p,cols,rows,bands):
@@ -219,22 +278,26 @@ Usage:
             sys.stdout.flush()    
             ci = CI(fns[i:j+2],n,p,cols,rows,bands)
             if medianfilter:
-                ci =  ndimage.filters.median_filter(ci, size = (3,3))
+                ci = ndimage.filters.median_filter(ci, size = (3,3))
             ciarray[i,j,:] = ci.ravel()
         print ' '    
 #  change map of most recent change occurrences
-    cmap = np.zeros((rows,cols),dtype=np.byte).ravel() 
+    cmap = np.zeros((rows*cols),dtype=np.byte)
 #  change frequency map 
-    fmap = np.zeros((rows,cols),dtype=np.byte).ravel()
+    fmap = np.zeros((rows*cols),dtype=np.byte)
+#  bitemporal change maps
+    bmap = np.zeros((rows*cols,k-1),dtype=np.byte)
     for ell in range(1,k):
         for j in range(ell-1,k-1):
             ci = ciarray[ell-1,j,:]
             idx = np.where( (ci>(1.0-significance)) & (cmap == (ell-1)) )
-            fmap[idx] = fmap[idx]+1 
-            cmap[idx] = j+1              
+            fmap[idx] += 1 
+            cmap[idx] = j+1 
+            bmap[idx,j] = 255             
 #  write to file system    
     cmap = np.reshape(cmap,(rows,cols))
     fmap = np.reshape(fmap,(rows,cols))
+    bmap = np.reshape(bmap,(rows,cols,k-1))
     driver = inDataset1.GetDriver() 
     basename = os.path.basename(outfn)
     name, _ = os.path.splitext(basename)
@@ -252,17 +315,29 @@ Usage:
     print 'change map image written to: %s'%outfn1  
     outfn2=outfn.replace(name,name+'_fmap')
     outDataset = driver.Create(outfn2,cols,rows,1,GDT_Byte)
-    geotransform = inDataset1.GetGeoTransform()
     if geotransform is not None:
-        outDataset.SetGeoTransform(geotransform)
-    projection = inDataset1.GetProjection()        
+        outDataset.SetGeoTransform(geotransform)      
     if projection is not None:
         outDataset.SetProjection(projection)     
     outBand = outDataset.GetRasterBand(1)
     outBand.WriteArray(fmap,0,0) 
     outBand.FlushCache() 
     print 'frequency map image written to: %s'%outfn2     
+    outfn3=outfn.replace(name,name+'_bmap')
+    outDataset = driver.Create(outfn3,cols,rows,k-1,GDT_Byte)
+    if geotransform is not None:
+        outDataset.SetGeoTransform(geotransform)       
+    if projection is not None:
+        outDataset.SetProjection(projection)  
+    for i in range(k-1):        
+        outBand = outDataset.GetRasterBand(i+1)
+        outBand.WriteArray(bmap[:,:,i],0,0) 
+        outBand.FlushCache() 
+    print 'bitemporal map image written to: %s'%outfn3    
     print 'elapsed time: '+str(time.time()-start)   
+    
+    north,south,east,west = footprint(outfn2)[1]
+     
     outDataset = None    
     inDataset1 = None        
     
