@@ -22,14 +22,14 @@ echo 'spatial subset   ' $dims
 
 imdir='/home/imagery/'
 
-fn1=$(ls -l $imdir | grep $1 | grep -v "_enl" | grep -v "_sub" | grep -v "_fmap" | grep -v "_warp" | grep -v "_cmap" | awk '{print $9}')
+fn1=$(ls -l $imdir | grep $1 | grep -v "enl" | grep -v "sub" | grep -v "map" | grep -v "warp" |awk '{print $9}')
 fn1=$imdir$fn1
 
 shift
 
 for ((i=1; i<$n; i++))
 do  
-    fn2=$(ls -l $imdir | grep $1 | grep -v "_enl" | grep -v "_sub" |grep -v "_warp" | grep -v "_cmap" | grep -v "_fmap" | awk '{print $9}' )
+    fn2=$(ls -l $imdir | grep $1 | grep -v "enl" | grep -v "sub" | grep -v "map" | grep -v "warp" |awk '{print $9}')
     fn2=$imdir$fn2
     fni=$(python /home/register.py -d $dims $fn1 $fn2 | tee /dev/tty | grep written | awk '{print $5}')
     [[ $fni = None ]] && exit 1

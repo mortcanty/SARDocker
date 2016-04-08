@@ -18,12 +18,81 @@
 #    GNU General Public License for more details.
 
 import sys, getopt, os
-from osgeo import gdal
+from osgeo import gdal, osr
+from osgeo.gdalconst import GDT_Byte
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import  auxil.auxil as auxil 
 import numpy as np
 from osgeo.gdalconst import GA_ReadOnly
+
+
+def klm(fn,dims):
+    KLM = '''<?xml version="1.0" encoding="UTF-8"?>
+    <kml xmlns="http://www.opengis.net/kml/2.2">
+      <Folder>
+        <name>Ground Overlay</name>
+        <description>Change map overlay</description>
+        <GroundOverlay>
+          <name>Change map overlay</name>
+          <description>SAR change detection.</description>
+          <Icon>
+            _image_
+          </Icon>
+          <LatLonBox>
+            <north>_north_</north>
+            <south>_south_</south>
+            <east>_east_</east>
+            <west>_west_</west>
+            <rotation>-0.0</rotation>
+          </LatLonBox>
+        </GroundOverlay>
+      </Folder>
+    </kml> '''
+    try:
+        imageDataset = gdal.Open(fn,GA_ReadOnly)
+        cols = imageDataset.RasterXSize
+        rows = imageDataset.RasterYSize           
+        gt =   imageDataset.GetGeoTransform()
+#      correct for subsetting
+        x0,y0,cols,rows = dims
+        gt = list(gt)
+        gt[0] = gt[0] + x0*gt[1]
+        gt[3] = gt[3] + y0*gt[5]
+#      get footprint
+        ulx = gt[0]  
+        uly = gt[3]
+        urx = gt[0] + cols*gt[1]
+        ury = gt[3] + cols*gt[4]
+        llx = gt[0]              + rows*gt[2]
+        lly = gt[3]              + rows*gt[5]
+        lrx = gt[0] + cols*gt[1] + rows*gt[2]
+        lry = gt[3] + cols*gt[4] + rows*gt[5]
+#      get image coordinate system       
+        old_cs = osr.SpatialReference()
+        old_cs.ImportFromWkt(imageDataset.GetProjection())
+#      create the lonlat coordinate system
+        new_cs = osr.SpatialReference()  
+        new_cs.SetWellKnownGeogCS('WGS84')       
+#      create a transform object to convert between coordinate systems
+        transform = osr.CoordinateTransformation(old_cs,new_cs)                                          
+#      get the bounding coordinates in lonlat (no elevation)
+        coords = []
+        coords.append(list(transform.TransformPoint(ulx,uly)[0:2]))      
+        coords.append(list(transform.TransformPoint(urx,ury)[0:2])) 
+        coords.append(list(transform.TransformPoint(llx,lly)[0:2]))
+        coords.append(list(transform.TransformPoint(lrx,lry)[0:2])) 
+#      get the klm LatLonBox dimensions
+        north = coords[0][1]; south = coords[2][1]; east = coords[1][0] ; west = coords[0][0] 
+#      edit the KLM string
+        KLM = KLM.replace('_north_',str(north))   
+        KLM = KLM.replace('_south_',str(south))
+        KLM = KLM.replace('_east_',str(east))   
+        KLM = KLM.replace('_west_',str(west))
+        return KLM
+    except Exception as e:
+        print 'Error: %s  Could not get image footprint'%e
+        return None   
 
 def make_image(redband,greenband,blueband,rows,cols,enhance):
     X = np.ones((rows*cols,3),dtype=np.uint8) 
@@ -109,7 +178,7 @@ def make_image(redband,greenband,blueband,rows,cols,enhance):
                 tmp = (tmp-mn)*255.0/(mx-mn)    
             tmp = np.where(tmp<0,0,tmp)  
             tmp = np.where(tmp>255,255,tmp)
- #         2% linear stretch           
+#          2% linear stretch           
             hist,bin_edges = np.histogram(tmp,256,(0,256))
             cdf = hist.cumsum()
             lower = 0
@@ -132,7 +201,7 @@ def make_image(redband,greenband,blueband,rows,cols,enhance):
             i += 1                           
     return np.reshape(X,(rows,cols,3))/255.
 
-def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,enhance=None,ENHANCE=None,cls=None,CLS=None,alpha=None):
+def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,enhance=None,ENHANCE=None,KLM=None,cls=None,CLS=None,alpha=None):
     gdal.AllRegister()
     if filename1 == None:        
         filename1 = raw_input('Enter image filename: ')
@@ -203,8 +272,7 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
         return
     X1 = make_image(redband,greenband,blueband,rows,cols,enhance1)
     if filename2 is not None:
-        if DIMS == None:
-            
+        if DIMS == None:      
             DIMS = [0,0,cols2,rows2]
         x0,y0,cols,rows = DIMS
         if RGB == None:
@@ -277,13 +345,32 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
             cbar.set_ticklabels(map(str,ticks))
         else:
             f, ax = plt.subplots(figsize=(10,10))
-            ax.imshow(X1)    
+            ax.imshow(X1) 
         ax.set_title('%s: %s: %s: %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims))) 
+    if KLM:
+        X1 = np.array(X1*255,dtype=np.uint8)           
+        driver = gdal.GetDriverByName( 'GTiff' )
+        ds = driver.Create( '/home/tmp.tif', cols, rows, 3, GDT_Byte)           
+        for i in range(3):        
+            outBand = ds.GetRasterBand(i+1)
+            outBand.WriteArray(X1[:,:,i],0,0) 
+            outBand.FlushCache() 
+        driver = gdal.GetDriverByName( 'PNG' )
+        driver.CreateCopy('/home/imagery/overlay.png', ds, 0)
+        driver = gdal.GetDriverByName( 'JPEG' )
+        driver.CreateCopy('/home/imagery/overlay.jpg', ds, 0)
+        os.remove('/home/tmp.tif')            
+        with open('/home/imagery/overlay_png.kml','w') as f:
+            print >>f, klm(filename1,dims).replace('_image_','overlay.png')           
+            f.close()
+        with open('/home/imagery/overlay_jpg.kml','w') as f:
+            print >>f, klm(filename1,dims).replace('_image_','overlay.jpg')           
+            f.close()    
     plt.show()
                       
 
 def main():
-    usage = '''Usage: python %s [-h] [-c classes] [-C Classes] \n
+    usage = '''Usage: python %s [-h] [-k] [-c classes] [-C Classes] \n
             [-l] [-L] [-o alpha] \n
             [-e enhancementf] [-E enhancementF]\n
             [-p posf] [P posF [-d dimsf] [-D dimsF]\n
@@ -291,10 +378,11 @@ def main():
                                         
             if -f is not specified it will be queried\n
             use -c classes and/or -C Classes for classification image\n 
+            use -k to generate a JPEG of filename1 and associated KLM file to overlay on Google Earth
             use -o alpha to overlay right onto left image with transparency alpha
             RGB bandPositions and spatialDimensions are lists, e.g., -p [1,4,3] -d [0,0,400,400] \n
             enhancements: 1=linear255 2=linear 3=linear2pc 4=equalization 5=logarithmic\n'''%sys.argv[0]
-    options,args = getopt.getopt(sys.argv[1:],'hc:o:C:f:F:p:P:d:D:e:E:')
+    options,args = getopt.getopt(sys.argv[1:],'hkc:o:C:f:F:p:P:d:D:e:E:')
     filename1 = None
     filename2 = None
     dims = None
@@ -306,10 +394,13 @@ def main():
     alpha = None
     cls = None
     CLS = None
+    KLM = None
     for option, value in options: 
         if option == '-h':
             print usage
             return 
+        elif option == '-k':
+            KLM = True
         elif option =='-o':
             alpha = eval(value)
         elif option == '-f':
@@ -333,7 +424,7 @@ def main():
         elif option == '-C':
             CLS = eval(value)                
                     
-    dispms(filename1,filename2,dims,DIMS,rgb,RGB,enhance,ENHANCE,cls,CLS,alpha)
+    dispms(filename1,filename2,dims,DIMS,rgb,RGB,enhance,ENHANCE,KLM,cls,CLS,alpha)
 
 if __name__ == '__main__':
     main()
