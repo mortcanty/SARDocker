@@ -57,8 +57,8 @@ def klm(fn,dims):
 #      correct for subsetting
         x0,y0,cols,rows = dims
         gt = list(gt)
-        gt[0] = gt[0] + x0*gt[1]
-        gt[3] = gt[3] + y0*gt[5]
+        gt[0] = gt[0] + x0*gt[1] + y0*gt[2]
+        gt[3] = gt[3] + x0*gt[4] + y0*gt[5]
 #      get footprint
         ulx = gt[0]  
         uly = gt[3]
@@ -73,7 +73,7 @@ def klm(fn,dims):
         old_cs.ImportFromWkt(imageDataset.GetProjection())
 #      create the lonlat coordinate system
         new_cs = osr.SpatialReference()  
-        new_cs.SetWellKnownGeogCS('WGS84')       
+        new_cs.SetWellKnownGeogCS('WGS84')              
 #      create a transform object to convert between coordinate systems
         transform = osr.CoordinateTransformation(old_cs,new_cs)                                          
 #      get the bounding coordinates in lonlat (no elevation)
@@ -206,6 +206,8 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
     if filename1 == None:        
         filename1 = raw_input('Enter image filename: ')
     inDataset1 = gdal.Open(filename1,GA_ReadOnly)    
+    projection = inDataset1.GetProjection()
+    geotransform = inDataset1.GetGeoTransform() 
     try:                   
         cols = inDataset1.RasterXSize    
         rows = inDataset1.RasterYSize  
@@ -231,7 +233,6 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
     r = int(np.min([r,bands1]))
     g = int(np.min([g,bands1]))
     b = int(np.min([b,bands1]))
-    
     if enhance == None:
         enhance = 5
     if enhance == 1:
@@ -355,17 +356,27 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
             outBand = ds.GetRasterBand(i+1)
             outBand.WriteArray(X1[:,:,i],0,0) 
             outBand.FlushCache() 
+#        if projection is not None:
+#            ds.SetProjection(projection) 
+#        if geotransform is not None:
+#            gt = list(geotransform)
+#            gt[0] = gt[0] + x0*gt[1]
+#            gt[3] = gt[3] + y0*gt[5]
+#        ds.SetGeoTransform(tuple(gt))                               
+#        "exec    gdalwarp -t_srs:epsg:900913 '/home/tmp.tif' '/home/tmp1.tif' "
+#        with open('/home/imagery/overlay_png.kml','w') as f:
+#            print >>f, klm('/home/temp1.tif').replace('_image_','overlay.png')           
+#            f.close() 
+#        os.remove('/home/tmp.tif')    
+#        os.remove('/home/tmp1.tif')
+            
+            
         driver = gdal.GetDriverByName( 'PNG' )
         driver.CreateCopy('/home/imagery/overlay.png', ds, 0)
-        driver = gdal.GetDriverByName( 'JPEG' )
-        driver.CreateCopy('/home/imagery/overlay.jpg', ds, 0)
         os.remove('/home/tmp.tif')            
         with open('/home/imagery/overlay_png.kml','w') as f:
             print >>f, klm(filename1,dims).replace('_image_','overlay.png')           
             f.close()
-        with open('/home/imagery/overlay_jpg.kml','w') as f:
-            print >>f, klm(filename1,dims).replace('_image_','overlay.jpg')           
-            f.close()    
     plt.show()
                       
 
@@ -378,8 +389,8 @@ def main():
                                         
             if -f is not specified it will be queried\n
             use -c classes and/or -C Classes for classification image\n 
-            use -k to generate a JPEG of filename1 and associated KLM file to overlay on Google Earth
-            use -o alpha to overlay right onto left image with transparency alpha
+            use -k to generate a PNG of filename1 and associated KLM file to overlay (approximately) on Google Earth\n
+            use -o alpha to overlay right onto left image with transparency alpha\n
             RGB bandPositions and spatialDimensions are lists, e.g., -p [1,4,3] -d [0,0,400,400] \n
             enhancements: 1=linear255 2=linear 3=linear2pc 4=equalization 5=logarithmic\n'''%sys.argv[0]
     options,args = getopt.getopt(sys.argv[1:],'hkc:o:C:f:F:p:P:d:D:e:E:')

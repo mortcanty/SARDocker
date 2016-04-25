@@ -28,7 +28,7 @@ from tempfile import NamedTemporaryFile
 
 
 def getmat(fn,cols,rows,bands):
-#  read 9- 4- or 1-band preprocessed polarimitric image files 
+#  read 9- 4- or 1-band preprocessed polarimetric matrix files 
 #  and return real/complex matrix elements 
     try:
         inDataset1 = gdal.Open(fn,GA_ReadOnly)     
@@ -88,9 +88,8 @@ def getmat(fn,cols,rows,bands):
         
 
     
-def CI(fns,n,p,cols,rows,bands):
-    '''Return change indices R_1*R_2...*R_n
-    for fns[1],fns[2]...fns[n]'''
+def PV(fns,n,p,cols,rows,bands):
+    '''Return p-values for change indices R^ell_j'''
     j = np.float64(len(fns))
     eps = sys.float_info.min
     k = 0.0; a = 0.0; rho = 0.0; xsi = 0.0; b = 0.0; zeta = 0.0
@@ -120,7 +119,7 @@ def CI(fns,n,p,cols,rows,bands):
         detsumj1 = k*xsi*zeta + 2*np.real(a*b*np.conj(rho)) - xsi*(abs(rho)**2) - k*(abs(b)**2) - zeta*(abs(a)**2)
         detj = k1*xsi1*zeta1 + 2*np.real(a1*b1*np.conj(rho1)) - xsi1*(abs(rho1)**2) - k1*(abs(b1)**2) - zeta1*(abs(a1)**2)
     elif p==2:
-        detsumj = k*xsi - abs(a)**2
+        detsumj = k*xsi - abs(a)**2 
         k -= k1; a -= a1; xsi -= xsi1
         detsumj1 = k*xsi - abs(a)**2
         detj = k1*xsi1 - abs(a1)**2
@@ -143,9 +142,9 @@ def CI(fns,n,p,cols,rows,bands):
     f =p**2
     rhoj = 1 - (2.*p**2 - 1)*(1. + 1./(j*(j-1)))/(6.*p*n)
     omega2j = -(p*p/4.)*(1.-1./rhoj)**2 + (1./(24.*n*n))*p*p*(p*p-1)*(1+(2.*j-1)/(j*(j-1))**2)/rhoj**2   
-#  return change index  
+#  return p-values  
     Z = -2*rhoj*lnRj
-    return (1.-omega2j)*stats.chi2.cdf(Z,[f])+omega2j*stats.chi2.cdf(Z,[f+4])  
+    return 1.0 - ((1.-omega2j)*stats.chi2.cdf(Z,[f])+omega2j*stats.chi2.cdf(Z,[f+4]))
                        
 def main():  
     usage = '''
@@ -215,33 +214,38 @@ Usage:
 #  create temporary, memory-mapped array of change indices p(Ri<ri)
     start = time.time()
     mm = NamedTemporaryFile()
-    ciarray = np.memmap(mm.name,dtype=np.float64,mode='w+',shape=(k-1,k-1,rows*cols))  
-    print 'ingesting images...' 
-    for i in range(k-1):       
-        for j in range(i,k-1):    
-            print 'R%i...R%i : '%(i+1,j+2),
-            sys.stdout.flush()    
-            ci = CI(fns[i:j+2],n,p,cols,rows,bands)
+    pvarray = np.memmap(mm.name,dtype=np.float64,mode='w+',shape=(k-1,k-1,rows*cols))  
+    print 'pre-calculating R and p-values...' 
+    for i in range(k-1):      
+        s = ''
+        for j in range(i,k-1):
+            s += 'R(l=%i,j=%i) '%((i+1),(j-i+2))
+            pv = PV(fns[i:j+2],n,p,cols,rows,bands)
             if medianfilter:
-                ci = ndimage.filters.median_filter(ci, size = (3,3))
-            ciarray[i,j,:] = ci.ravel()
-        print ' '    
-#  change map of most recent change occurrences
-    cmap = np.zeros((rows*cols),dtype=np.byte)
+                pv = ndimage.filters.median_filter(pv, size = (3,3))
+            pvarray[i,j,:] = pv.ravel()
+        print s    
+#  map of most recent change occurrences
+    cmap = np.zeros((rows*cols),dtype=np.byte)    
+#  map of first change occurrence
+    smap = np.zeros((rows*cols),dtype=np.byte)
 #  change frequency map 
     fmap = np.zeros((rows*cols),dtype=np.byte)
 #  bitemporal change maps
-    bmap = np.zeros((rows*cols,k-1),dtype=np.byte)
+    bmap = np.zeros((rows*cols,k-1),dtype=np.byte)  
     for ell in range(k-1):
         for j in range(ell,k-1):
-            ci = ciarray[ell,j,:]
-            idx = np.where( (ci>(1.0-significance)) & (cmap == (ell)) )
+            pv = pvarray[ell,j,:]
+            idx = np.where( (pv <= significance) & (cmap == ell) )
+            idx1 = np.where( (pv <= significance) & (cmap == 0) )
             fmap[idx] += 1 
             cmap[idx] = j+1 
-            bmap[idx,j] = 255             
+            bmap[idx,j] = 255 
+            smap[idx1] = j+1
 #  write to file system    
     cmap = np.reshape(cmap,(rows,cols))
     fmap = np.reshape(fmap,(rows,cols))
+    smap = np.reshape(smap,(rows,cols))
     bmap = np.reshape(bmap,(rows,cols,k-1))
     driver = inDataset1.GetDriver() 
     basename = os.path.basename(outfn)
@@ -257,7 +261,7 @@ Usage:
     outBand = outDataset.GetRasterBand(1)
     outBand.WriteArray(cmap,0,0) 
     outBand.FlushCache() 
-    print 'change map image written to: %s'%outfn1  
+    print 'most recent change map written to: %s'%outfn1  
     outfn2=outfn.replace(name,name+'_fmap')
     outDataset = driver.Create(outfn2,cols,rows,1,GDT_Byte)
     if geotransform is not None:
@@ -267,7 +271,7 @@ Usage:
     outBand = outDataset.GetRasterBand(1)
     outBand.WriteArray(fmap,0,0) 
     outBand.FlushCache() 
-    print 'frequency map image written to: %s'%outfn2     
+    print 'frequency map written to: %s'%outfn2     
     outfn3=outfn.replace(name,name+'_bmap')
     outDataset = driver.Create(outfn3,cols,rows,k-1,GDT_Byte)
     if geotransform is not None:
@@ -279,6 +283,16 @@ Usage:
         outBand.WriteArray(bmap[:,:,i],0,0) 
         outBand.FlushCache() 
     print 'bitemporal map image written to: %s'%outfn3    
+    outfn4=outfn.replace(name,name+'_smap')
+    outDataset = driver.Create(outfn4,cols,rows,1,GDT_Byte)
+    if geotransform is not None:
+        outDataset.SetGeoTransform(geotransform)      
+    if projection is not None:
+        outDataset.SetProjection(projection)     
+    outBand = outDataset.GetRasterBand(1)
+    outBand.WriteArray(smap,0,0) 
+    outBand.FlushCache() 
+    print 'first change map written to: %s'%outfn4         
     print 'elapsed time: '+str(time.time()-start)   
     outDataset = None    
     inDataset1 = None        

@@ -8,6 +8,7 @@
 # ./omnibus.sh 20141108 20150507 20150612 [400,400,1600,1600] 12 0.01
 
 echo '***** Multitemporal PolSAR Change Detection **********'
+echo '***** Sentinel-1 dualpol imagery *********************'
 echo '******************************************************'
 
 n=$[$#-3]

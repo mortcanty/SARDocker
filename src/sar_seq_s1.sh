@@ -5,6 +5,7 @@
 #
 
 echo '***** Multitemporal PolSAR Change Detection **********'
+echo '***** Sentenel-1 dualpol imagery *********************'
 echo '******************************************************'
 
 n=$[$#-3]

@@ -10,7 +10,7 @@ import = 1
 external = 0
 sar processing = 0
 polarimetry = 0
-terrain correction = 0
+terrain correction = 1
 calibration = 0
 geocoding = 1
 export = 1
@@ -26,6 +26,27 @@ dump envi header = 0
 multilook SLC = 1
 apply ers2 gain fix = 0
 image data type = POLARIMETRIC_MATRIX
+
+[Terrain correction]
+pixel spacing = 20.5
+digital elevation model = /home/imagery/dem.tif
+mask =
+auto mask water = 0
+water height cutoff = 1.000000
+fill value = 0
+do radiometric = 0
+smooth dem holes = 0
+no resampling = 0
+refine geolocation only = 1
+interpolate = 1
+save terrcorr dem = 0
+save terrcorr layover mask = 0
+no matching = 0
+range offset = 0.000000
+azimuth offset = 0.000000
+use gr dem = 0
+use zero offsets if match fails = 0
+save incidence angles = 0
 
 [Geocoding]
 projection = /home/utm.prj
