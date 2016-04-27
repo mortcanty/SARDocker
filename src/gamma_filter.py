@@ -6,27 +6,16 @@
 #  Usage:             
 #    python gamma_filter.py [-h] [-p] [-d dims] infile enl
 #
-# MIT License
-# 
-# Copyright (c) 2016 Mort Canty
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
+#  Copyright (c) 2015, Mort Canty
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
 
 import os, sys, time, getopt
 import numpy as np
@@ -73,8 +62,7 @@ def gamma_filter((k,inimage,rows,cols,m)):
     edges[0] = [[-1,0,1],[-1,0,1],[-1,0,1]]
     edges[1] = [[0,1,1],[-1,0,1],[-1,-1,0]]
     edges[2] = [[1,1,1],[0,0,0],[-1,-1,-1]]
-    edges[3] = [[1,1,0],[1,0,-1],[0,-1,-1]]     
-    
+    edges[3] = [[1,1,0],[1,0,-1],[0,-1,-1]]        
     result = np.copy(inimage[k])
     arr = inimage[k].ravel()
     zf = 3./7
@@ -182,8 +170,9 @@ def main():
         band = inDataset.GetRasterBand(4)
         inimage[1] = band.ReadAsArray(x0,y0,cols,rows) 
     else:
+        inimage = np.zeros((1,rows,cols))
         outDataset = driver.Create(outfile,cols,rows,1,GDT_Float32)
-        inimage = inDataset.GetRasterBand(1)  
+        inimage[0] = inDataset.GetRasterBand(1).ReadAsArray(x0,y0,cols,rows)   
     print '========================='
     print '    GAMMA MAP FILTER'
     print '========================='
@@ -218,7 +207,7 @@ def main():
                                          (1,inimage,rows,cols,m)])
     else:
         print 'filtering scalar image ...'
-        outimage = gamma_filter(0,inimage,rows,cols,m)                  
+        outimage = gamma_filter((0,inimage,rows,cols,m))                  
     geotransform = inDataset.GetGeoTransform()
     if geotransform is not None:
         gt = list(geotransform)

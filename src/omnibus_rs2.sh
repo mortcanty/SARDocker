@@ -6,6 +6,7 @@
 
 echo '***** Multitemporal PolSAR Change Detection **********'
 echo '***** Radarsat2 quad or dualpol imagery **************'
+echo '***** Pre-processed with MapReady ********************'
 echo '******************************************************'
 
 n=$[$#-3]

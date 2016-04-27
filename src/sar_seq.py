@@ -228,14 +228,14 @@ Usage:
     pvarray = np.memmap(mm.name,dtype=np.float64,mode='w+',shape=(k-1,k-1,rows*cols))  
     print 'pre-calculating R and p-values...' 
     for i in range(k-1):      
-        s = ''
         for j in range(i,k-1):
-            s += 'R(l=%i,j=%i) '%((i+1),(j-i+2))
+            print 'R(l=%i,j=%i) '%((i+1),(j-i+2)),
+            sys.stdout.flush()
             pv = PV(fns[i:j+2],n,p,cols,rows,bands)
             if medianfilter:
                 pv = ndimage.filters.median_filter(pv, size = (3,3))
-            pvarray[i,j,:] = pv.ravel()
-        print s    
+            pvarray[i,j,:] = pv.ravel() 
+        print ''
 #  map of most recent change occurrences
     cmap = np.zeros((rows*cols),dtype=np.byte)    
 #  map of first change occurrence
