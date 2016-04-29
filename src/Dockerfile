@@ -6,9 +6,6 @@ FROM     debian:jessie
 
 MAINTAINER Mort Canty "mort.canty@gmail.com"
 
-ENV    IMAGE REFRESHED_AT 2015-12-10
-#------------------------------
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python \
     build-essential \
@@ -17,7 +14,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     xutils-dev \
     pandoc \
-    dos2unix \
     python-dev \
     python-pygments \
     python-zmq \
@@ -38,9 +34,7 @@ RUN     gcc -shared -Wall -g -o libprov_means.so -fPIC prov_means.c
 RUN     cp libprov_means.so /usr/lib/libprov_means.so
 
 
-ENV    ASF_TOOLS REFRESHED_AT 2015-11-20
-#----------------------------------------
-# prerequisites
+# asf prerequisites
 RUN     apt-get install -y \
          pkg-config bison flex  \
           gettext libgsl0-dev \
@@ -61,7 +55,6 @@ RUN     rm mapready-3.2.1-src.tar.gz
 
 # ipython notebook
 RUN     pip install "ipython[notebook]"
-#RUN     pip install jupyter
 
 # enable parallel computing
 RUN     pip install ipyparallel
@@ -70,8 +63,7 @@ RUN     sed -i "/# Configuration file for jupyter-notebook./a  \
                 c.NotebookApp.server_extensions.append('ipyparallel.nbextension')" \
                 /root/.jupyter/jupyter_notebook_config.py
             
-ENV     SCRIPTS_CHANGED 2016-04-08a
-#---------------------------------
+
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
 WORKDIR /
 RUN     tar -xzvf auxil-1.1.tar.gz
@@ -84,7 +76,6 @@ RUN     rm auxil-1.1.tar.gz
 # ipython notebook startup script 
 ADD     notebook.sh  /
 RUN     chmod u+x /notebook.sh
-RUN     dos2unix /notebook.sh
 
 EXPOSE 8888
 
@@ -93,30 +84,26 @@ COPY    dispms.py /home/dispms.py
 COPY    ingest.py /home/ingest.py
 COPY    register.py /home/register.py
 COPY    enlml.py /home/enlml.py
-#COPY    wishart.py /home/wishart.py
 COPY    omnibus.py /home/omnibus.py
 COPY    subset.py /home/subset.py
 COPY    sar_seq.py /home/sar_seq.py
 COPY    gamma_filter.py /home/gamma_filter.py
-#COPY    emisar.py /home/emisar.py
-#COPY    header.py /home/header.py
 
 
 COPY    mapready.sh /home/mapready.sh
-#COPY    wishart_rs2.sh /home/wishart_rs2.sh
 COPY    omnibus_rs2.sh /home/omnibus_rs2.sh
 COPY    omnibus_s1.sh /home/omnibus_s1.sh
 COPY    sar_seq_rs2.sh /home/sar_seq_rs2.sh
 COPY    sar_seq_s1.sh /home/sar_seq_s1.sh
 COPY    sar_seq_tsx.sh /home/sar_seq_tsx.sh
 RUN     chmod u+x /home/mapready.sh
-#RUN     chmod u+x /home/wishart_rs2.sh
 RUN     chmod u+x /home/omnibus_rs2.sh
 RUN     chmod u+x /home/omnibus_s1.sh
 RUN     chmod u+x /home/sar_seq_rs2.sh
 RUN     chmod u+x /home/sar_seq_s1.sh
 RUN     chmod u+x /home/sar_seq_tsx.sh 
-    
+
+# for rpis    
 #COPY    start4engines.sh /home/data/start4engines.sh    
 #RUN     chmod u+x /home/data/start4engines.sh
 

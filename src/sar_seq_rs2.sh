@@ -29,22 +29,17 @@ imdir='/home/imagery/'
 dir=$imdir$(ls -l $imdir | grep 'MapReady$' | grep $1 | awk '{print $9}')
 subdir='/'$(ls -l $dir | grep [CT][23] | awk '{print $9}')'/'
 dir=$imdir$(ls -l $imdir | grep 'MapReady$' | grep $1 | awk '{print $9}')$subdir
-fn1=$dir'polSAR.tif'
-shift
 
-for ((i=1; i<$n; i++))
+for ((i=1; i<=$n; i++))
 do  
     dir=$imdir$(ls -l $imdir | grep 'MapReady$' | grep $1 | awk '{print $9}')$subdir
-    fn2=$dir'polSAR.tif'
-    fni=$(python /home/register.py -d $dims $fn1 $fn2 | tee /dev/tty | grep written | awk '{print $5}')
+    fni=$dir'polSAR.tif'
     [[ $fni = None ]] && exit 1
     fn[i]=$fni
     shift  
 done
 
-fn1=$(python /home/subset.py -d $dims $fn1 | tee /dev/tty | grep written | awk '{print $4}')
-
-s="$fn1 ${fn[*]}"
+s="${fn[*]}"
 fns=${s//" "/","}
 
-python /home/sar_seq.py -s $significance -m $fns $outfn $enl 
+python /home/sar_seq.py -d $dims -s $significance -m $fns $outfn $enl 

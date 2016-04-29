@@ -33,14 +33,10 @@
 import numpy as np
 from scipy import stats, ndimage
 import os, sys, time, getopt, gdal
-from subset import subset
-from ipyparallel import Client
 from osgeo.gdalconst import GA_ReadOnly, GDT_Byte
 from tempfile import NamedTemporaryFile
 
-def call_register((fn0,fni,dims)):
-    from register import register
-    return register(fn0,fni,dims)
+
 
 def getmat(fn,cols,rows,bands):
 #  read 9- 4- or 1-band preprocessed polarimetric matrix files 
@@ -100,6 +96,8 @@ def getmat(fn,cols,rows,bands):
     except Exception as e:
         print 'Error: %s  -- Could not read file'%e
         sys.exit(1)   
+        
+
     
 def PV(fns,n,p,cols,rows,bands):
     '''Return p-values for change indices R^ell_j'''
@@ -163,28 +161,23 @@ def main():
     usage = '''
 Usage:
 ------------------------------------------------
-    python %s [-h] [-s significance] [-m] [-d dims] infile_1,infile_2,...,infile_n outfilename enl
+    python %s [-h] [-s significance] [-m] infile_1,infile_2,...,infile_n outfilename enl
     
     Perform sequential change detection on multi-temporal, polarimetric SAR imagery in covariance or 
-    coherency matrix format. 
-                  Use -m for a median filter
-                  Use -d if files are to be co-registered to a subset of the first image                
-                  infiles are comma-separated, no blank spaces
+    coherency matrix format. Use -m for a median filter.
+                  (infiles are comma-separated, no blank spaces)
                   outfilename is without path (will be written to same directory as infile_1)
 --------------------------------------------'''%sys.argv[0]
 
-    options,args = getopt.getopt(sys.argv[1:],'hmd:s:')
+    options,args = getopt.getopt(sys.argv[1:],'hms:')
     medianfilter = False
-    dims = None
     significance = 0.01
     for option, value in options: 
         if option == '-h':
             print usage
             return 
         elif option == '-m':
-            medianfilter = True # for noisy satellite data?
-        elif option == '-d':
-            dims = eval(value)
+            medianfilter = True # for noisy satellite data
         elif option == '-s':
             significance = eval(value) 
     if len(args) != 3:              
@@ -200,8 +193,7 @@ Usage:
     print '     Multi-temporal SAR Change Detection'
     print '==============================================='
     print time.asctime()
-    gdal.AllRegister()   
-    start = time.time()    
+    gdal.AllRegister()       
 #  first SAR image   
     try:              
         inDataset1 = gdal.Open(fns[0],GA_ReadOnly)     
@@ -212,25 +204,6 @@ Usage:
     except Exception as e:
         print 'Error: %s  -- Could not read file'%e
         sys.exit(1)    
-    if dims is not None:
-#  images are not yet co-registered, so subset first image and register the others
-        _,_,cols,rows = dims
-        args1 = [(fns[0],fns[i],dims) for i in range(1,k)]
-        fn0 = subset(fns[0],dims)
-        try:
-            print ' \nAttempting parallel execution of co-registration ...' 
-            start1 = time.time()  
-            c = Client()
-            print 'available engines %s'%str(c.ids)
-            v = c[:]
-            fns = v.map_sync(call_register,args1)
-            print 'elapsed time for co-registration: '+str(time.time()-start1) 
-        except Exception as e: 
-            start1 = time.time()
-            print '%s \nFailed, so running sequential co-registration ...'%e
-            fns = map(call_register,args1)  
-            print 'elapsed time for co-registration: '+str(time.time()-start1)       
-        fns.insert(0,fn0)              
 #  dimension
     if bands==9:       
         p = 3
@@ -241,7 +214,7 @@ Usage:
     else:
         print 'incorrect number of bands'
         return    
-    print ' \nFirst (reference) filename:  %s'%fns[0]
+    print 'first (reference) filename:  %s'%fns[0]
     print 'number of images: %i'%k
     print 'equivalent number of looks: %f'%n
     print 'significance level: %f'%significance
@@ -250,6 +223,7 @@ Usage:
     dirn = os.path.dirname(path)
     outfn = dirn + '/' + outfn 
 #  create temporary, memory-mapped array of change indices p(Ri<ri)
+    start = time.time()
     mm = NamedTemporaryFile()
     pvarray = np.memmap(mm.name,dtype=np.float64,mode='w+',shape=(k-1,k-1,rows*cols))  
     print 'pre-calculating R and p-values...' 
@@ -330,7 +304,7 @@ Usage:
     outBand.WriteArray(smap,0,0) 
     outBand.FlushCache() 
     print 'first change map written to: %s'%outfn4         
-    print 'total elapsed time: '+str(time.time()-start)   
+    print 'elapsed time: '+str(time.time()-start)   
     outDataset = None    
     inDataset1 = None        
     

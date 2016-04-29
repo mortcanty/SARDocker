@@ -23,25 +23,19 @@ echo 'spatial subset   ' $dims
 
 imdir='/home/imagery/'
 
-fn1=$(ls -l $imdir | grep $1 | awk '{print $9}')'/C1/Intensity_HH.bin'
-fn1=$imdir$fn1
 
-shift
-
-for ((i=1; i<$n; i++))
+for ((i=1; i<=$n; i++))
 do  
-    fn2=$(ls -l $imdir | grep $1 | awk '{print $9}')'/C1/Intensity_HH.bin'
-    fn2=$imdir$fn2
-    fni=$(python /home/register.py -d $dims $fn1 $fn2 | tee /dev/tty | grep written | awk '{print $5}')
+    fni=$imdir$(ls -l $imdir | grep $1 | awk '{print $9}')'/C1/Intensity_HH.bin'
     [[ $fni = None ]] && exit 1
     fn[i]=$fni
     shift  
 done
 
-fn1=$(python /home/subset.py -d $dims $fn1 | tee /dev/tty | grep written | awk '{print $4}')
 
-s="$fn1 ${fn[*]}"
+
+s="${fn[*]}"
 fns=${s//" "/","}
 
-python /home/sar_seq.py -s $significance -m $fns $outfn $enl 
+python /home/sar_seq.py -d $dims -s $significance -m $fns $outfn $enl 
  

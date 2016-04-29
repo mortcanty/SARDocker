@@ -4,7 +4,7 @@
 #  Purpose: ;    gamma MAP adaptive filtering for polarized SAR intensity images
 #            Ref: Oliver and Quegan (2004) Understanding SAR Images, Scitech 
 #  Usage:             
-#    python gamma_filter.py [-h] [-p] [-d dims] infile enl
+#    python gamma_filter.py [-h] [-d dims] infile enl
 #
 #  Copyright (c) 2015, Mort Canty
 #    This program is free software; you can redistribute it and/or modify
@@ -116,10 +116,9 @@ def main():
     usage = '''
     Usage:
     ------------------------------------------------
-    python %s [-h] [-p] [-d dims] filename enl
+    python %s [-h] [-d dims] filename enl
     
     Run a gamma MAP filter in the diagonal elements of a C or T matrix
-     Set flag -p for parallel execution on (at least 2) IPython engines
     ------------------------------------------------''' %sys.argv[0]
     options,args = getopt.getopt(sys.argv[1:],'hpd:')
     dims = None
@@ -182,32 +181,39 @@ def main():
     if parallel:
         print 'parallel processing requested'   
     start = time.time() 
-    if parallel:
+    try:
+        print 'Attempting parallel computation ...'
         rc = Client()
         v = rc[:]
         v.execute('import numpy as np')
         print 'available engines: %s'%str(rc.ids)
-    if bands == 9:      
-        print 'filtering 3 diagonal matrix element bands ...'   
-        if parallel:    
+        if bands == 9:      
+            print 'filtering 3 diagonal matrix element bands ...'   
             outimage = v.map_sync(gamma_filter,[(0,inimage,rows,cols,m),
                                                 (1,inimage,rows,cols,m),
                                                 (2,inimage,rows,cols,m)])
-        else:
-            outimage = map(gamma_filter,[(0,inimage,rows,cols,m),
-                                         (1,inimage,rows,cols,m),
-                                         (2,inimage,rows,cols,m)])
-    elif bands == 4:
-        print 'filtering 2 diagonal matrix element bands ...' 
-        if parallel:
+        elif bands == 4:
+            print 'filtering 2 diagonal matrix element bands ...' 
             outimage = v.map_sync(gamma_filter,[(0,inimage,rows,cols,m),
                                                 (1,inimage,rows,cols,m)])
         else:
+            print 'filtering scalar image ...'
+            outimage = gamma_filter((0,inimage,rows,cols,m))           
+    except:
+        print 'Failed, so computing sequentially ...'
+        if bands == 9:      
+            print 'filtering 3 diagonal matrix element bands ...'   
+            outimage = map(gamma_filter,[(0,inimage,rows,cols,m),
+                                         (1,inimage,rows,cols,m),
+                                         (2,inimage,rows,cols,m)])
+        elif bands == 4:
+            print 'filtering 2 diagonal matrix element bands ...' 
+
             outimage = map(gamma_filter,[(0,inimage,rows,cols,m),
                                          (1,inimage,rows,cols,m)])
-    else:
-        print 'filtering scalar image ...'
-        outimage = gamma_filter((0,inimage,rows,cols,m))                  
+        else:
+            print 'filtering scalar image ...'
+            outimage = gamma_filter((0,inimage,rows,cols,m))                             
     geotransform = inDataset.GetGeoTransform()
     if geotransform is not None:
         gt = list(geotransform)

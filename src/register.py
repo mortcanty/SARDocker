@@ -35,20 +35,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import auxil.auxil as auxil
-import os, sys, getopt, time
-import numpy as np
-from osgeo import gdal
-import scipy.ndimage.interpolation as ndii
-from osgeo.gdalconst import GA_ReadOnly, GDT_Float32
+import sys, getopt
   
 def register(file0, file1, dims=None, outfile=None): 
+    import auxil.auxil as auxil
+    import os, time
+    import numpy as np
+    from osgeo import gdal
+    import scipy.ndimage.interpolation as ndii
+    from osgeo.gdalconst import GA_ReadOnly, GDT_Float32
+    
     print '========================='
     print '     Register SAR'
     print '========================='
     print time.asctime()      
     try: 
-        if outfile == None:
+        if outfile is None:
             path = os.path.abspath(file1)    
             dirn = os.path.dirname(path)
             path = os.path.dirname(file1)    
