@@ -104,8 +104,8 @@ RUN     chmod u+x /home/sar_seq_s1.sh
 RUN     chmod u+x /home/sar_seq_tsx.sh 
 
 # for rpis    
-#COPY    start4engines.sh /home/data/start4engines.sh    
-#RUN     chmod u+x /home/data/start4engines.sh
+#COPY    start4engines.sh /home/start4engines.sh    
+#RUN     chmod u+x /home/start4engines.sh
 
 COPY    utm.prj /home/utm.prj
 COPY    radarsat2quadpol.template /home/radarsat2quadpol.template

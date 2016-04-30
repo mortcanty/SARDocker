@@ -120,15 +120,12 @@ def main():
     
     Run a gamma MAP filter in the diagonal elements of a C or T matrix
     ------------------------------------------------''' %sys.argv[0]
-    options,args = getopt.getopt(sys.argv[1:],'hpd:')
+    options,args = getopt.getopt(sys.argv[1:],'hd:')
     dims = None
-    parallel = False
     for option, value in options: 
         if option == '-h':
             print usage
             return 
-        elif option == '-p':
-            parallel = True
         elif option == '-d':
             dims = eval(value)  
     if len(args) != 2:
@@ -177,11 +174,9 @@ def main():
     print '========================='
     print time.asctime()
     print 'infile:  %s'%infile
-    print 'equivalent number of looks: %f'%m  
-    if parallel:
-        print 'parallel processing requested'   
-    start = time.time() 
+    print 'equivalent number of looks: %f'%m    
     try:
+        start = time.time() 
         print 'Attempting parallel computation ...'
         rc = Client()
         v = rc[:]
@@ -200,6 +195,7 @@ def main():
             print 'filtering scalar image ...'
             outimage = gamma_filter((0,inimage,rows,cols,m))           
     except:
+        start = time.time() 
         print 'Failed, so computing sequentially ...'
         if bands == 9:      
             print 'filtering 3 diagonal matrix element bands ...'   
