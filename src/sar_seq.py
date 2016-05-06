@@ -167,8 +167,9 @@ Usage:
     
     Perform sequential change detection on multi-temporal, polarimetric SAR imagery in covariance or 
     coherency matrix format. 
-                  Use -m for a median filter
-                  Use -d if files are to be co-registered to a subset of the first image                
+                  Use -m for a 3x3 median filter on p-values (e.g. for noisy satellite data)
+                  Use -d if files are to be co-registered to a subset of the first image, otherwise
+                      it is assumed that the images are co-registered and have identical spatial dimensions              
                   infiles are comma-separated, no blank spaces
                   outfilename is without path (will be written to same directory as infile_1)
 --------------------------------------------'''%sys.argv[0]
@@ -182,7 +183,7 @@ Usage:
             print usage
             return 
         elif option == '-m':
-            medianfilter = True # for noisy satellite data?
+            medianfilter = True 
         elif option == '-d':
             dims = eval(value)
         elif option == '-s':
@@ -222,7 +223,7 @@ Usage:
             start1 = time.time()  
             c = Client()
             print 'available engines %s'%str(c.ids)
-            v = c[:]
+            v = c[:]   
             fns = v.map_sync(call_register,args1)
             print 'elapsed time for co-registration: '+str(time.time()-start1) 
         except Exception as e: 
@@ -252,8 +253,8 @@ Usage:
 #  create temporary, memory-mapped array of change indices p(Ri<ri)
     mm = NamedTemporaryFile()
     pvarray = np.memmap(mm.name,dtype=np.float64,mode='w+',shape=(k-1,k-1,rows*cols))  
-    print 'pre-calculating R and p-values...' 
-    for i in range(k-1):      
+    print 'pre-calculating R and p-values ...' 
+    for i in range(k-1):       
         for j in range(i,k-1):
             print 'R(l=%i,j=%i) '%((i+1),(j-i+2)),
             sys.stdout.flush()

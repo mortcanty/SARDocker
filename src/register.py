@@ -3,7 +3,7 @@
 #    register.py
 #
 #  Purpose:  
-#    Perfrom image-image registration of two polarimetric SAR images 
+#    Perform image-image registration of two polarimetric SAR images 
 #    via similarity warping. Assumes 9-band quad pol, 4-band dual pol
 #    or one-band single pol SAR images.
 #

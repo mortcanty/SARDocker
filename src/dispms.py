@@ -255,7 +255,7 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
     elif enhance == 4:
         enhance1 = 'equalization'
     elif enhance == 5:
-        enhance1 = 'logarithmic'    
+        enhance1 = 'logarithmic'   
     else:
         enhance = 'linear2pc' 
     try:  
@@ -265,25 +265,18 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
             blueband  = np.nan_to_num(inDataset1.GetRasterBand(b).ReadAsArray(x0,y0,cols,rows))
         else:
             classimg = inDataset1.GetRasterBand(1).ReadAsArray(x0,y0,cols,rows).ravel()
-            lct = len(auxil.ctable)/3
-            ctable = np.reshape(auxil.ctable,(lct,3))
-            redband = classimg*0
-            greenband = classimg*0
-            blueband = classimg*0
-            for k in cls:
-                idx = np.where(classimg==k)
-                redband[idx] = ctable[k,0]
-                greenband[idx] = ctable[k,1]
-                blueband[idx] = ctable[k,2]
-            redband = np.reshape(redband,(rows,cols))    
-            greenband = np.reshape(greenband,(rows,cols))
-            blueband = np.reshape(blueband,(rows,cols))
+            num_classes = np.max(classimg)
+            redband = classimg   
+            greenband = classimg
+            blueband = classimg
+            enhance1 = 'linear'
         inDataset1 = None   
     except  Exception as e:
         print 'Error in dispms: %s'%e  
         return
     X1 = make_image(redband,greenband,blueband,rows,cols,enhance1)
     if filename2 is not None:
+#      two images 
         if DIMS == None:      
             DIMS = [0,0,cols2,rows2]
         x0,y0,cols,rows = DIMS
@@ -292,10 +285,9 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
         r,g,b = RGB
         r = int(np.min([r,bands2]))
         g = int(np.min([g,bands2]))
-        b = int(np.min([b,bands2]))
-        
+        b = int(np.min([b,bands2]))        
         enhance = ENHANCE
-        if enhance == None:
+        if enhance == None:              
             enhance = 5
         if enhance == 1:
             enhance2 = 'linear255'
@@ -316,19 +308,11 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
                 blueband  = np.nan_to_num(inDataset2.GetRasterBand(b).ReadAsArray(x0,y0,cols,rows))
             else:
                 classimg = inDataset2.GetRasterBand(1).ReadAsArray(x0,y0,cols,rows).ravel()
-                lct = len(auxil.ctable)/3
-                ctable = np.reshape(auxil.ctable,(lct,3))
-                redband = classimg*0
-                greenband = classimg*0
-                blueband = classimg*0
-                for k in CLS:
-                    idx = np.where(classimg==k)
-                    redband[idx] = ctable[k,0]
-                    greenband[idx] = ctable[k,1]
-                    blueband[idx] = ctable[k,2]
-                redband = np.reshape(redband,(rows,cols))    
-                greenband = np.reshape(greenband,(rows,cols))
-                blueband = np.reshape(blueband,(rows,cols))
+                NUM_CLASSES = np.max(classimg)
+                redband = classimg   
+                greenband = classimg
+                blueband = classimg
+                enhance2 = 'linear'
             inDataset2 = None   
         except  Exception as e:
             print 'Error in dispms: %s'%e  
@@ -336,27 +320,40 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
         X2 = make_image(redband,greenband,blueband,rows,cols,enhance2)  
         if alpha is not None:
             f, ax = plt.subplots(figsize=(10,10)) 
-            ax.imshow(X1)
+            if cls:
+                ticks = np.linspace(0.0,1.0,num_classes+1)
+                ticklabels = map(str,range(num_classes+1))        
+                cax = ax.imshow(X1[:,:,0])  
+                cax.set_clim(0.0,1.0)         
+                cbar = f.colorbar(cax,orientation='horizontal', cmap='jet', ticks=ticks, shrink=0.8,pad=0.1)
+                cbar.set_ticklabels(ticklabels)
+            else:
+                ax.imshow(X1)
             ax.imshow(X2,alpha=alpha)
             ax.set_title('%s: %s: %s: %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims)))
         else:    
             f, ax = plt.subplots(1,2,figsize=(20,10))
-            ax[0].imshow(X1)
-            ax[0].set_title('%s: %s: %s:  %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims)))
-            ax[1].imshow(X2)
-            ax[1].set_title('%s: %s: %s: %s\n'%(os.path.basename(filename2),enhance2, str(RGB), str(DIMS)))
+            if cls:
+                img = ax[0].imshow(X1[:,:,0])            
+            else:
+                ax[0].imshow(X1)             
+            ax[0].set_title('%s: %s: %s:  %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims)))           
+            if CLS:
+                img = ax[1].imshow(X2[:,:,0]) 
+            else:          
+                ax[1].imshow(X2)             
+            ax[1].set_title('%s: %s: %s:  %s\n'%(os.path.basename(filename2),enhance2, str(rgb), str(dims)))
     else:
-        if cls is not None:
-            f, ax = plt.subplots(figsize=(15,10))
-            cmap = colors.ListedColormap(ctable/255.)
-            ticks = range(lct)
-            tickspos = map(lambda x: 0.8*x/float(lct),ticks)
-            cax = ax.imshow(X1,cmap=cmap)        
-            cbar = f.colorbar(cax,ticks=tickspos,orientation='vertical',shrink=0.7)
-            cbar.set_ticks(tickspos)
-            cbar.set_ticklabels(map(str,ticks))
+#      one image
+        fig,ax = plt.subplots(figsize=(10,10))
+        if cls:
+            ticks = np.linspace(0.0,1.0,num_classes+1)
+            ticklabels = map(str,range(num_classes+1))        
+            cax = ax.imshow(X1[:,:,0])  
+            cax.set_clim(0.0,1.0)         
+            cbar = fig.colorbar(cax,orientation='horizontal', cmap='jet', ticks=ticks, shrink=0.8,pad=0.1)
+            cbar.set_ticklabels(ticklabels)
         else:
-            f, ax = plt.subplots(figsize=(10,10))
             ax.imshow(X1) 
         ax.set_title('%s: %s: %s: %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims))) 
     if KLM:
@@ -392,19 +389,19 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
                       
 
 def main():
-    usage = '''Usage: python %s [-h] [-k] [-c classes] [-C Classes] \n
+    usage = '''Usage: python %s [-h] [-k] [-c][-C Classes] \n
             [-l] [-L] [-o alpha] \n
             [-e enhancementf] [-E enhancementF]\n
             [-p posf] [P posF [-d dimsf] [-D dimsF]\n
             [-f filename1] [-F filename2] \n
                                         
             if -f is not specified it will be queried\n
-            use -c classes and/or -C Classes for classification image\n 
+            use -c  -C  for classification image\n 
             use -k to generate a PNG of filename1 and associated KLM file to overlay (approximately) on Google Earth\n
             use -o alpha to overlay right onto left image with transparency alpha\n
             RGB bandPositions and spatialDimensions are lists, e.g., -p [1,4,3] -d [0,0,400,400] \n
             enhancements: 1=linear255 2=linear 3=linear2pc 4=equalization 5=logarithmic\n'''%sys.argv[0]
-    options,args = getopt.getopt(sys.argv[1:],'hkc:o:C:f:F:p:P:d:D:e:E:')
+    options,args = getopt.getopt(sys.argv[1:],'hkco:Cf:F:p:P:d:D:e:E:')
     filename1 = None
     filename2 = None
     dims = None
@@ -442,9 +439,9 @@ def main():
         elif option == '-E':
             ENHANCE = eval(value)    
         elif option == '-c':
-            cls = eval(value)  
+            cls = True  
         elif option == '-C':
-            CLS = eval(value)                
+            CLS = True              
                     
     dispms(filename1,filename2,dims,DIMS,rgb,RGB,enhance,ENHANCE,KLM,cls,CLS,alpha)
 
