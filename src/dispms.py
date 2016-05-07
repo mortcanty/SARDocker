@@ -4,7 +4,7 @@
 #  Purpose:  Display a multispectral image
 #             allowed formats: uint8, uint16,float32,float64 
 #  Usage (from command line):             
-#    python dispms.py  
+#    python dispms.py  [options]
 #
 # MIT License
 # 
@@ -334,12 +334,12 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
         else:    
             f, ax = plt.subplots(1,2,figsize=(20,10))
             if cls:
-                img = ax[0].imshow(X1[:,:,0])            
+                ax[0].imshow(X1[:,:,0])            
             else:
                 ax[0].imshow(X1)             
             ax[0].set_title('%s: %s: %s:  %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims)))           
             if CLS:
-                img = ax[1].imshow(X2[:,:,0]) 
+                ax[1].imshow(X2[:,:,0]) 
             else:          
                 ax[1].imshow(X2)             
             ax[1].set_title('%s: %s: %s:  %s\n'%(os.path.basename(filename2),enhance2, str(rgb), str(dims)))
