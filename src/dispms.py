@@ -32,7 +32,7 @@ import sys, getopt, os
 from osgeo import gdal, osr
 from osgeo.gdalconst import GDT_Byte
 import matplotlib.pyplot as plt
-import matplotlib.colors as colors
+from matplotlib import cm
 import  auxil.auxil as auxil 
 import numpy as np
 from osgeo.gdalconst import GA_ReadOnly
@@ -334,12 +334,18 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
         else:    
             f, ax = plt.subplots(1,2,figsize=(20,10))
             if cls:
-                ax[0].imshow(X1[:,:,0])            
+                cax = ax[0].imshow(X1[:,:,0])  
+                cax.set_clim(0.01,1.0)     
+                jet = cm.get_cmap('jet')
+                jet.set_under('black')          
             else:
                 ax[0].imshow(X1)             
             ax[0].set_title('%s: %s: %s:  %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims)))           
             if CLS:
-                ax[1].imshow(X2[:,:,0]) 
+                cax = ax[1].imshow(X2[:,:,0])
+                cax.set_clim(0.01,1.0)     
+                jet = cm.get_cmap('jet')
+                jet.set_under('black')      
             else:          
                 ax[1].imshow(X2)             
             ax[1].set_title('%s: %s: %s:  %s\n'%(os.path.basename(filename2),enhance2, str(rgb), str(dims)))
@@ -347,11 +353,14 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
 #      one image
         fig,ax = plt.subplots(figsize=(10,10))
         if cls:
-            ticks = np.linspace(0.0,1.0,num_classes+1)
+            ticks = np.linspace(0.01,1.0,num_classes+1)
             ticklabels = map(str,range(num_classes+1))        
             cax = ax.imshow(X1[:,:,0])  
-            cax.set_clim(0.0,1.0)         
-            cbar = fig.colorbar(cax,orientation='horizontal', cmap='jet', ticks=ticks, shrink=0.8,pad=0.1)
+ #           plt.axis('off')
+            cax.set_clim(0.01,1.0)     
+            jet = cm.get_cmap('jet')
+            jet.set_under('black')
+            cbar = fig.colorbar(cax,orientation='horizontal', cmap=jet, ticks=ticks, shrink=0.82,pad=0.05)
             cbar.set_ticklabels(ticklabels)
         else:
             ax.imshow(X1) 
