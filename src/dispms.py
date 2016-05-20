@@ -308,7 +308,6 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
                 blueband  = np.nan_to_num(inDataset2.GetRasterBand(b).ReadAsArray(x0,y0,cols,rows))
             else:
                 classimg = inDataset2.GetRasterBand(1).ReadAsArray(x0,y0,cols,rows).ravel()
-                NUM_CLASSES = np.max(classimg)
                 redband = classimg   
                 greenband = classimg
                 blueband = classimg
@@ -356,7 +355,7 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
             ticks = np.linspace(0.01,1.0,num_classes+1)
             ticklabels = map(str,range(num_classes+1))        
             cax = ax.imshow(X1[:,:,0])  
- #           plt.axis('off')
+            plt.axis('off')
             cax.set_clim(0.01,1.0)     
             jet = cm.get_cmap('jet')
             jet.set_under('black')
@@ -364,7 +363,8 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
             cbar.set_ticklabels(ticklabels)
         else:
             ax.imshow(X1) 
-        ax.set_title('%s: %s: %s: %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims))) 
+            plt.axis('off')
+#        ax.set_title('%s: %s: %s: %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims))) 
     if KLM:
         X1 = np.array(X1*255,dtype=np.uint8)           
         driver = gdal.GetDriverByName( 'GTiff' )
@@ -410,7 +410,7 @@ def main():
             use -o alpha to overlay right onto left image with transparency alpha\n
             RGB bandPositions and spatialDimensions are lists, e.g., -p [1,4,3] -d [0,0,400,400] \n
             enhancements: 1=linear255 2=linear 3=linear2pc 4=equalization 5=logarithmic\n'''%sys.argv[0]
-    options,args = getopt.getopt(sys.argv[1:],'hkco:Cf:F:p:P:d:D:e:E:')
+    options,_ = getopt.getopt(sys.argv[1:],'hkco:Cf:F:p:P:d:D:e:E:')
     filename1 = None
     filename2 = None
     dims = None

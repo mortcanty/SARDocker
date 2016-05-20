@@ -42,66 +42,70 @@ def call_register((fn0,fni,dims)):
     from register import register
     return register(fn0,fni,dims)
 
-def getmat(fn,cols,rows,bands):
-#  read 9- 4- or 1-band preprocessed polarimetric matrix files 
-#  and return real/complex matrix elements 
-    try:
-        inDataset1 = gdal.Open(fn,GA_ReadOnly)     
-        if bands == 9:
-    #      T11 (k1)
-            b = inDataset1.GetRasterBand(1)
-            k1 = b.ReadAsArray(0,0,cols,rows)
-    #      T12  (a1)
-            b = inDataset1.GetRasterBand(2)
-            a1 = b.ReadAsArray(0,0,cols,rows)
-            b = inDataset1.GetRasterBand(3)    
-            im = b.ReadAsArray(0,0,cols,rows)
-            a1 = (a1 + 1j*im)
-    #      T13  (rho1)
-            b = inDataset1.GetRasterBand(4)
-            rho1 = b.ReadAsArray(0,0,cols,rows)
-            b = inDataset1.GetRasterBand(5)
-            im = b.ReadAsArray(0,0,cols,rows)
-            rho1 = (rho1 + 1j*im)      
-    #      T22 (xsi1)
-            b = inDataset1.GetRasterBand(6)
-            xsi1 = b.ReadAsArray(0,0,cols,rows)    
-    #      T23 (b1)        
-            b = inDataset1.GetRasterBand(7)
-            b1 = b.ReadAsArray(0,0,cols,rows)
-            b = inDataset1.GetRasterBand(8)
-            im = b.ReadAsArray(0,0,cols,rows)
-            b1 = (b1 + 1j*im)      
-    #      T33 (zeta1)
-            b = inDataset1.GetRasterBand(9)
-            zeta1 = b.ReadAsArray(0,0,cols,rows) 
-            result = (k1,a1,rho1,xsi1,b1,zeta1)             
-        elif bands == 4:
-    #      C11 (k1)
-            b = inDataset1.GetRasterBand(1)
-            k1 = b.ReadAsArray(0,0,cols,rows)
-    #      C12  (a1)
-            b = inDataset1.GetRasterBand(2)
-            a1 = b.ReadAsArray(0,0,cols,rows)
-            b = inDataset1.GetRasterBand(3)
-            im = b.ReadAsArray(0,0,cols,rows)
-            a1 = (a1 + 1j*im)        
-    #      C22 (xsi1)
-            b = inDataset1.GetRasterBand(4)
-            xsi1 = b.ReadAsArray(0,0,cols,rows)  
-            result = (k1,a1,xsi1)         
-        elif bands == 1:        
-    #      C11 (k1)
-            b = inDataset1.GetRasterBand(1)
-            k1 = b.ReadAsArray(0,0,cols,rows) 
-            result = (k1,)
-        inDataset1 = None
-        return result
-    except Exception as e:
-        print 'Error: %s  -- Could not read file'%e
-        sys.exit(1)   
+def call_median_filter(pv):
+    return ndimage.filters.median_filter(pv, size = (3,3))
+ 
+def PV((fns,n,p,cols,rows,bands)):
     
-def PV(fns,n,p,cols,rows,bands):
+    def getmat(fn,cols,rows,bands):
+    #  read 9- 4- or 1-band preprocessed polarimetric matrix files 
+    #  and return real/complex matrix elements 
+        try:
+            inDataset1 = gdal.Open(fn,GA_ReadOnly)     
+            if bands == 9:
+        #      T11 (k1)
+                b = inDataset1.GetRasterBand(1)
+                k1 = b.ReadAsArray(0,0,cols,rows)
+        #      T12  (a1)
+                b = inDataset1.GetRasterBand(2)
+                a1 = b.ReadAsArray(0,0,cols,rows)
+                b = inDataset1.GetRasterBand(3)    
+                im = b.ReadAsArray(0,0,cols,rows)
+                a1 = (a1 + 1j*im)
+        #      T13  (rho1)
+                b = inDataset1.GetRasterBand(4)
+                rho1 = b.ReadAsArray(0,0,cols,rows)
+                b = inDataset1.GetRasterBand(5)
+                im = b.ReadAsArray(0,0,cols,rows)
+                rho1 = (rho1 + 1j*im)      
+        #      T22 (xsi1)
+                b = inDataset1.GetRasterBand(6)
+                xsi1 = b.ReadAsArray(0,0,cols,rows)    
+        #      T23 (b1)        
+                b = inDataset1.GetRasterBand(7)
+                b1 = b.ReadAsArray(0,0,cols,rows)
+                b = inDataset1.GetRasterBand(8)
+                im = b.ReadAsArray(0,0,cols,rows)
+                b1 = (b1 + 1j*im)      
+        #      T33 (zeta1)
+                b = inDataset1.GetRasterBand(9)
+                zeta1 = b.ReadAsArray(0,0,cols,rows) 
+                result = (k1,a1,rho1,xsi1,b1,zeta1)             
+            elif bands == 4:
+        #      C11 (k1)
+                b = inDataset1.GetRasterBand(1)
+                k1 = b.ReadAsArray(0,0,cols,rows)
+        #      C12  (a1)
+                b = inDataset1.GetRasterBand(2)
+                a1 = b.ReadAsArray(0,0,cols,rows)
+                b = inDataset1.GetRasterBand(3)
+                im = b.ReadAsArray(0,0,cols,rows)
+                a1 = (a1 + 1j*im)        
+        #      C22 (xsi1)
+                b = inDataset1.GetRasterBand(4)
+                xsi1 = b.ReadAsArray(0,0,cols,rows)  
+                result = (k1,a1,xsi1)         
+            elif bands == 1:        
+        #      C11 (k1)
+                b = inDataset1.GetRasterBand(1)
+                k1 = b.ReadAsArray(0,0,cols,rows) 
+                result = (k1,)
+            inDataset1 = None
+            return result
+        except Exception as e:
+            print 'Error: %s  -- Could not read file'%e
+            sys.exit(1)   
+    
     '''Return p-values for change indices R^ell_j'''
     j = np.float64(len(fns))
     eps = sys.float_info.min
@@ -196,11 +200,6 @@ Usage:
     outfn = args[1]
     n = np.float64(eval(args[2])) # equivalent number of looks
     k = len(fns)                  # number of images
-    
-    print '==============================================='
-    print '     Multi-temporal SAR Change Detection'
-    print '==============================================='
-    print time.asctime()
     gdal.AllRegister()   
     start = time.time()    
 #  first SAR image   
@@ -219,7 +218,7 @@ Usage:
         args1 = [(fns[0],fns[i],dims) for i in range(1,k)]
         fn0 = subset(fns[0],dims)
         try:
-            print ' \nAttempting parallel execution of co-registration ...' 
+            print ' \nattempting parallel execution of co-registration ...' 
             start1 = time.time()  
             c = Client()
             print 'available engines %s'%str(c.ids)
@@ -242,7 +241,11 @@ Usage:
     else:
         print 'incorrect number of bands'
         return    
-    print ' \nFirst (reference) filename:  %s'%fns[0]
+    print '==============================================='
+    print '     Multi-temporal SAR Change Detection'
+    print '==============================================='   
+    print time.asctime()  
+    print 'First (reference) filename:  %s'%fns[0]
     print 'number of images: %i'%k
     print 'equivalent number of looks: %f'%n
     print 'significance level: %f'%significance
@@ -253,16 +256,42 @@ Usage:
 #  create temporary, memory-mapped array of change indices p(Ri<ri)
     mm = NamedTemporaryFile()
     pvarray = np.memmap(mm.name,dtype=np.float64,mode='w+',shape=(k-1,k-1,rows*cols))  
-    print 'pre-calculating R and p-values ...' 
-    for i in range(k-1):       
-        for j in range(i,k-1):
-            print 'R(l=%i,j=%i) '%((i+1),(j-i+2)),
-            sys.stdout.flush()
-            pv = PV(fns[i:j+2],n,p,cols,rows,bands)
+    print 'pre-calculating Rj and p-values ...' 
+    start1 = time.time() 
+    try:
+        print 'attempting parallel calculation ...' 
+        c = Client()
+        print 'available engines %s'%str(c.ids)
+        v = c[:]   
+        v.execute('import numpy as np')
+        v.execute('from osgeo.gdalconst import GA_ReadOnly')
+        v.execute('import sys, gdal')
+        v.execute('from scipy import stats, ndimage')
+        print 'ell = ',
+        sys.stdout.flush()      
+        for i in range(k-1):  
+            print i+1,  
+            sys.stdout.flush()              
+            args1 = [(fns[i:j+2],n,p,cols,rows,bands) for j in range(i,k-1)]         
+            pvs = v.map_sync(PV,args1) 
             if medianfilter:
-                pv = ndimage.filters.median_filter(pv, size = (3,3))
-            pvarray[i,j,:] = pv.ravel() 
-        print ''
+                pvs = v.map_sync(call_median_filter,pvs)           
+            for j in range(i,k-1):
+                pvarray[i,j,:] = pvs[j-i].ravel() 
+    except Exception as e: 
+        print '%s \nfailed, so running sequential calculation ...'%e  
+        print 'ell= ',
+        sys.stdout.flush()  
+        for i in range(k-1):        
+            print i+1,   
+            sys.stdout.flush()             
+            args1 = [(fns[i:j+2],n,p,cols,rows,bands) for j in range(i,k-1)]                         
+            pvs = map(PV,args1)            
+            if medianfilter:
+                pvs = map(call_median_filter,pvs)
+            for j in range(i,k-1):
+                pvarray[i,j,:] = pvs[j-i].ravel() 
+    print '\nelapsed time for p-value calculation: '+str(time.time()-start1)    
 #  map of most recent change occurrences
     cmap = np.zeros((rows*cols),dtype=np.byte)    
 #  map of first change occurrence
