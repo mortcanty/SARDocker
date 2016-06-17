@@ -416,6 +416,7 @@ Options:
   -d -D    spatial subset lists e.g. -d [0,0,200,200]
   -c -C    display as classification image
   -o alpha overlay right image onto left with opacity alpha
+  -k       generate approximate KML overlay image
   
   -------------------------------------'''%sys.argv[0]
   
