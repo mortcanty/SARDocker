@@ -62,6 +62,10 @@ RUN     jupyter notebook --generate-config
 RUN     sed -i "/# Configuration file for jupyter-notebook./a  \ 
                 c.NotebookApp.server_extensions.append('ipyparallel.nbextension')" \
                 /root/.jupyter/jupyter_notebook_config.py
+                
+RUN     pip install ipywidgets
+RUN     jupyter nbextension enable --py widgetsnbextension
+RUN     pip install ipdb
             
 
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
@@ -84,7 +88,6 @@ COPY    dispms.py /home/dispms.py
 COPY    ingest.py /home/ingest.py
 COPY    register.py /home/register.py
 COPY    enlml.py /home/enlml.py
-COPY    omnibus.py /home/omnibus.py
 COPY    subset.py /home/subset.py
 COPY    sar_seq.py /home/sar_seq.py
 COPY    gamma_filter.py /home/gamma_filter.py

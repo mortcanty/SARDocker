@@ -4,7 +4,7 @@
 #  Purpose:  Display a multispectral image
 #             allowed formats: uint8, uint16,float32,float64 
 #  Usage (from command line):             
-#    python dispms.py  [options]
+#    python dispms.py  [OPTIONS]
 #
 # MIT License
 # 
@@ -398,18 +398,27 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
                       
 
 def main():
-    usage = '''Usage: python %s [-h] [-k] [-c][-C Classes] \n
-            [-l] [-L] [-o alpha] \n
-            [-e enhancementf] [-E enhancementF]\n
-            [-p posf] [P posF [-d dimsf] [-D dimsF]\n
-            [-f filename1] [-F filename2] \n
-                                        
-            if -f is not specified it will be queried\n
-            use -c  -C  for classification image\n 
-            use -k to generate a PNG of filename1 and associated KLM file to overlay (approximately) on Google Earth\n
-            use -o alpha to overlay right onto left image with transparency alpha\n
-            RGB bandPositions and spatialDimensions are lists, e.g., -p [1,4,3] -d [0,0,400,400] \n
-            enhancements: 1=linear255 2=linear 3=linear2pc 4=equalization 5=logarithmic\n'''%sys.argv[0]
+    usage = '''
+Usage: 
+--------------------------------------
+
+Display an RGB composite image
+
+python %s [OPTIONS] 
+
+Options:
+
+  -h       this help
+  -f       image or left-hand image (if not specified, it will be queried)
+  -F       right-hand image 
+  -e -E    enhancements (1=linear255 2=linear 3=linear2pc 4=equalization 5=logarithmic (default)) 
+  -p -P    RGB band position lists e.g. -p [1,2,3] 
+  -d -D    spatial subset lists e.g. -d [0,0,200,200]
+  -c -C    display as classification image
+  -o alpha overlay right image onto left with opacity alpha
+  
+  -------------------------------------'''%sys.argv[0]
+  
     options,_ = getopt.getopt(sys.argv[1:],'hkco:Cf:F:p:P:d:D:e:E:')
     filename1 = None
     filename2 = None

@@ -6,7 +6,7 @@
 #    import subset
 #    subset.subset(filename,dims,outfile) 
 #          or        
-#    python subset.py [-h] [-d dims] [-p pos] filename
+#    python subset.py [OPTIONS] filename
 # MIT License
 # 
 # Copyright (c) 2016 Mort Canty
@@ -94,8 +94,22 @@ def subset(infile, dims=None, pos=None, outfile=None):
         return None     
     
 def main(): 
-    usage = '''Usage: python %s  [-d dims] [-p pos] fileName\n
-            spatial and spectral dimensions are lists, e.g., -d [0,0,400,400] \n'''%sys.argv[0]
+    usage = '''
+Usage:
+------------------------------------------------
+
+python %s [OPTIONS] filename
+    
+    
+Perform spatial subsetting
+    
+Options:
+
+   -h    this help
+   -d    spatial subset list e.g. -d [0,0,500,500]
+   -p    band position list e.g. -p [1,2,3,4,5,7]
+   
+--------------------------------------------'''%sys.argv[0]
     options,args = getopt.getopt(sys.argv[1:],'hd:p:')
     dims = None
     pos = None

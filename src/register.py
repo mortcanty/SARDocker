@@ -11,7 +11,7 @@
 #    import register
 #    register.register(reffilename,warpfilename,dims,outfile) 
 #          or        
-#    python register.py [-h] [-d dims] reffilename warpfilename
+#    python register.py [OPTIONS] reffilename warpfilename
 #
 # MIT License
 # 
@@ -184,13 +184,19 @@ def main():
     usage = '''
 Usage:
 ------------------------------------------------
-    python %s [-h] [-d DIMS] reffilename warpfilename
+
+python %s [OPTIONS] reffilename warpfilename
     
     
-    Perform image-image registration of two polarimetric SAR images 
-    via similarity warping. Assumes 9-band quad pol, 4-band dual pol
-    or one-band single pol SAR images.
-    NOTE: Both images must completely include the spatial subset DIMS
+Perform image-image registration of two polarimetric SAR images 
+via similarity warping.  NOTE: Both images must completely include
+the spatial subset DIMS
+    
+Options:
+
+   -h    this help
+   -d    spatial subset list e.g. -d [0,0,500,500]
+   
 --------------------------------------------'''%sys.argv[0]
 
     options,args = getopt.getopt(sys.argv[1:],'hd:')

@@ -6,7 +6,7 @@
 #            Condradsen et al. (2015) Accepted for IEEE Transactions on Geoscience and Remote Sensing
 #
 #  Usage:             
-#    python sar_seq.py [-h] [-m] [-d dims] [-s significance] filenamelist enl
+#    python sar_seq.py [OPTIONS] filenamelist enl
 #
 # MIT License
 # 
@@ -46,10 +46,11 @@ def call_median_filter(pv):
     return ndimage.filters.median_filter(pv, size = (3,3))
  
 def PV((fns,n,p,cols,rows,bands)):
+    '''Return p-values for change indices R^ell_j'''    
     
     def getmat(fn,cols,rows,bands):
     #  read 9- 4- or 1-band preprocessed polarimetric matrix files 
-    #  and return real/complex matrix elements 
+    #  and return (complex) matrix elements 
         try:
             inDataset1 = gdal.Open(fn,GA_ReadOnly)     
             if bands == 9:
@@ -106,7 +107,6 @@ def PV((fns,n,p,cols,rows,bands)):
             print 'Error: %s  -- Could not read file'%e
             sys.exit(1)   
     
-    '''Return p-values for change indices R^ell_j'''
     j = np.float64(len(fns))
     eps = sys.float_info.min
     k = 0.0; a = 0.0; rho = 0.0; xsi = 0.0; b = 0.0; zeta = 0.0
@@ -162,20 +162,58 @@ def PV((fns,n,p,cols,rows,bands)):
 #  return p-values  
     Z = -2*rhoj*lnRj
     return 1.0 - ((1.-omega2j)*stats.chi2.cdf(Z,[f])+omega2j*stats.chi2.cdf(Z,[f+4]))
+
+def change_maps(pvarray,significance):
+    k = pvarray.shape[0]+1
+    n = pvarray.shape[2]
+#  map of most recent change occurrences
+    cmap = np.zeros(n,dtype=np.byte)    
+#  map of first change occurrence
+    smap = np.zeros(n,dtype=np.byte)
+#  change frequency map 
+    fmap = np.zeros(n,dtype=np.byte)
+#  bitemporal change maps
+    bmap = np.zeros((n,k-1),dtype=np.byte)  
+    for ell in range(k-1):
+        for j in range(ell,k-1):
+            pv = pvarray[ell,j,:]
+            idx = np.where( (pv <= significance) & (cmap == ell) )
+            idx1 = np.where( (pv <= significance) & (cmap == 0) )
+            fmap[idx] += 1 
+            cmap[idx] = j+1 
+            bmap[idx,j] = 255 
+            smap[idx1] = j+1
+    return (cmap,smap,fmap,bmap)
                        
 def main():  
     usage = '''
 Usage:
 ------------------------------------------------
-    python %s [-h] [-s significance] [-m] [-d dims] infile_1,infile_2,...,infile_n outfilename enl
-    
-    Perform sequential change detection on multi-temporal, polarimetric SAR imagery in covariance or 
-    coherency matrix format. 
-                  Use -m for a 3x3 median filter on p-values (e.g. for noisy satellite data)
-                  Use -d if files are to be co-registered to a subset of the first image, otherwise
-                      it is assumed that the images are co-registered and have identical spatial dimensions              
-                  infiles are comma-separated, no blank spaces
-                  outfilename is without path (will be written to same directory as infile_1)
+
+Sequential change detection for polarimetric SAR images
+
+python %s [OPTIONS]  infiles outfile enl
+
+Options:
+  
+  -h           this help
+  -m           run 3x3 median filter on p-values prior to thresholding (e.g. for noisy satellite data)  
+  -d  dims     files are to be co-registered to a subset dims = [x0,y0,rows,cols] of the first image, otherwise
+               it is assumed that the images are co-registered and have identical spatial dimensions  
+  -s  signif   significance level for change detection (default 0.01)
+
+infiles:
+
+  comma-separated list of full paths to input files, no blank spaces: /path/to/infile_1, ... ,/path/to/infile_k
+  
+outfile:
+
+  without path (will be written to same directory as infile_1)
+  
+enl:
+
+  equivalent number of looks
+
 --------------------------------------------'''%sys.argv[0]
 
     options,args = getopt.getopt(sys.argv[1:],'hmd:s:')
@@ -292,23 +330,7 @@ Usage:
             for j in range(i,k-1):
                 pvarray[i,j,:] = pvs[j-i].ravel() 
     print '\nelapsed time for p-value calculation: '+str(time.time()-start1)    
-#  map of most recent change occurrences
-    cmap = np.zeros((rows*cols),dtype=np.byte)    
-#  map of first change occurrence
-    smap = np.zeros((rows*cols),dtype=np.byte)
-#  change frequency map 
-    fmap = np.zeros((rows*cols),dtype=np.byte)
-#  bitemporal change maps
-    bmap = np.zeros((rows*cols,k-1),dtype=np.byte)  
-    for ell in range(k-1):
-        for j in range(ell,k-1):
-            pv = pvarray[ell,j,:]
-            idx = np.where( (pv <= significance) & (cmap == ell) )
-            idx1 = np.where( (pv <= significance) & (cmap == 0) )
-            fmap[idx] += 1 
-            cmap[idx] = j+1 
-            bmap[idx,j] = 255 
-            smap[idx1] = j+1
+    cmap,smap,fmap,bmap = change_maps(pvarray,significance)
 #  write to file system    
     cmap = np.reshape(cmap,(rows,cols))
     fmap = np.reshape(fmap,(rows,cols))
