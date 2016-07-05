@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     xutils-dev \
     pandoc \
-    python-dev \
+    python-dev \ 
     python-pygments \
     python-zmq \
     python-pip 
@@ -67,7 +67,7 @@ RUN     pip install ipywidgets
 RUN     jupyter nbextension enable --py widgetsnbextension
 RUN     pip install ipdb
             
-
+#  my auxil
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
 WORKDIR /
 RUN     tar -xzvf auxil-1.1.tar.gz
@@ -94,14 +94,10 @@ COPY    gamma_filter.py /home/gamma_filter.py
 
 
 COPY    mapready.sh /home/mapready.sh
-COPY    omnibus_rs2.sh /home/omnibus_rs2.sh
-COPY    omnibus_s1.sh /home/omnibus_s1.sh
 COPY    sar_seq_rs2.sh /home/sar_seq_rs2.sh
 COPY    sar_seq_s1.sh /home/sar_seq_s1.sh
 COPY    sar_seq_tsx.sh /home/sar_seq_tsx.sh
 RUN     chmod u+x /home/mapready.sh
-RUN     chmod u+x /home/omnibus_rs2.sh
-RUN     chmod u+x /home/omnibus_s1.sh
 RUN     chmod u+x /home/sar_seq_rs2.sh
 RUN     chmod u+x /home/sar_seq_s1.sh
 RUN     chmod u+x /home/sar_seq_tsx.sh 

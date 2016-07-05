@@ -2,8 +2,9 @@
 #******************************************************************************
 #  Name:     sar_seq.py
 #  Purpose:  Perform sequential change detection on multi-temporal, polarimetric SAR imagery 
-#            Determine time(s) at which change occurred
-#            Condradsen et al. (2015) Accepted for IEEE Transactions on Geoscience and Remote Sensing
+#            Determine time(s) at which change occurred, see
+#            Condradsen et al. (2016) IEEE Transactions on Geoscience and Remote Sensing,
+#            Vol. 54 No. 5 pp. 3007-3024
 #
 #  Usage:             
 #    python sar_seq.py [OPTIONS] filenamelist enl
@@ -214,7 +215,7 @@ enl:
 
   equivalent number of looks
 
---------------------------------------------'''%sys.argv[0]
+-------------------------------------------------'''%sys.argv[0]
 
     options,args = getopt.getopt(sys.argv[1:],'hmd:s:')
     medianfilter = False

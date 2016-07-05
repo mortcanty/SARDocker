@@ -355,7 +355,7 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
             ticks = np.linspace(0.01,1.0,num_classes+1)
             ticklabels = map(str,range(num_classes+1))        
             cax = ax.imshow(X1[:,:,0])  
-            plt.axis('off')
+#            plt.axis('off')
             cax.set_clim(0.01,1.0)     
             jet = cm.get_cmap('jet')
             jet.set_under('black')
@@ -363,8 +363,8 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
             cbar.set_ticklabels(ticklabels)
         else:
             ax.imshow(X1) 
-            plt.axis('off')
-#        ax.set_title('%s: %s: %s: %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims))) 
+#            plt.axis('off')
+        ax.set_title('%s: %s: %s: %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims))) 
     if KLM:
         X1 = np.array(X1*255,dtype=np.uint8)           
         driver = gdal.GetDriverByName( 'GTiff' )
