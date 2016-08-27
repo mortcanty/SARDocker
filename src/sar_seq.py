@@ -2,11 +2,12 @@
 #******************************************************************************
 #  Name:     sar_seq.py
 #  Purpose:  Perform sequential change detection on multi-temporal, polarimetric SAR imagery 
-#            Determine time(s) at which change occurred
-#            Condradsen et al. (2015) Accepted for IEEE Transactions on Geoscience and Remote Sensing
+#            Determine time(s) at which change occurred, see
+#            Condradsen et al. (2016) IEEE Transactions on Geoscience and Remote Sensing,
+#            Vol. 54 No. 5 pp. 3007-3024
 #
 #  Usage:             
-#    python sar_seq.py [-h] [-m] [-d dims] [-s significance] filenamelist enl
+#    python sar_seq.py [OPTIONS] filenamelist enl
 #
 # MIT License
 # 
@@ -39,17 +40,18 @@ from osgeo.gdalconst import GA_ReadOnly, GDT_Byte
 from tempfile import NamedTemporaryFile
 
 def call_register((fn0,fni,dims)):
-    from register import register
+    from registersar import register
     return register(fn0,fni,dims)
 
 def call_median_filter(pv):
     return ndimage.filters.median_filter(pv, size = (3,3))
  
 def PV((fns,n,p,cols,rows,bands)):
+    '''Return p-values for change indices R^ell_j'''    
     
     def getmat(fn,cols,rows,bands):
-    #  read 9- 4- or 1-band preprocessed polarimetric matrix files 
-    #  and return real/complex matrix elements 
+    #  read 9- 4- 3- 2- or 1-band preprocessed polarimetric matrix files 
+    #  and return (complex) matrix elements
         try:
             inDataset1 = gdal.Open(fn,GA_ReadOnly)     
             if bands == 9:
@@ -93,8 +95,26 @@ def PV((fns,n,p,cols,rows,bands)):
                 a1 = (a1 + 1j*im)        
         #      C22 (xsi1)
                 b = inDataset1.GetRasterBand(4)
+                xsi1 = b.ReadAsArray(0,0,cols,rows)   
+            elif bands == 3:
+        #      T11 (k1)
+                b = inDataset1.GetRasterBand(1)
+                k1 = b.ReadAsArray(0,0,cols,rows)
+        #      T22 (xsi1)
+                b = inDataset1.GetRasterBand(2)
+                xsi1 = b.ReadAsArray(0,0,cols,rows)    
+        #      T33 (zeta1)
+                b = inDataset1.GetRasterBand(3)
+                zeta1 = b.ReadAsArray(0,0,cols,rows) 
+                result = (k1,xsi1,zeta1)          
+            elif bands == 2:
+        #      C11 (k1)
+                b = inDataset1.GetRasterBand(1)
+                k1 = b.ReadAsArray(0,0,cols,rows)    
+        #      C22 (xsi1)
+                b = inDataset1.GetRasterBand(2)
                 xsi1 = b.ReadAsArray(0,0,cols,rows)  
-                result = (k1,a1,xsi1)         
+                result = (k1,xsi1)         
             elif bands == 1:        
         #      C11 (k1)
                 b = inDataset1.GetRasterBand(1)
@@ -106,13 +126,12 @@ def PV((fns,n,p,cols,rows,bands)):
             print 'Error: %s  -- Could not read file'%e
             sys.exit(1)   
     
-    '''Return p-values for change indices R^ell_j'''
     j = np.float64(len(fns))
     eps = sys.float_info.min
     k = 0.0; a = 0.0; rho = 0.0; xsi = 0.0; b = 0.0; zeta = 0.0
     for fn in fns:
         result = getmat(fn,cols,rows,bands)
-        if p==3:
+        if bands==9:
             k1,a1,rho1,xsi1,b1,zeta1 = result
             k1 = n*np.float64(k1)
             a1 = n*np.complex128(a1)
@@ -121,26 +140,47 @@ def PV((fns,n,p,cols,rows,bands)):
             b1 = n*np.complex128(b1)
             zeta1 = n*np.float64(zeta1)
             k += k1; a += a1; rho += rho1; xsi += xsi1; b += b1; zeta += zeta1  
-        elif p==2:
+        elif bands==4:
             k1,a1,xsi1 = result
             k1 = n*np.float64(k1)
             a1 = n*np.complex128(a1)
             xsi1 = n*np.float64(xsi1)
             k += k1; a += a1; xsi += xsi1
-        elif p==1:
+        elif bands==3:
+            k1,xsi1,zeta1 = result
+            k1 = n*np.float64(k1)
+            xsi1 = n*np.float64(xsi1)
+            zeta1 = n*np.float64(zeta1)
+            k += k1; xsi += xsi1; zeta += zeta1  
+        elif bands==2:
+            k1,xsi1 = result
+            k1 = n*np.float64(k1)
+            xsi1 = n*np.float64(xsi1)
+            k += k1; xsi += xsi1
+        elif bands==1:
             k1 = n*np.float64(result[0])
             k += k1              
-    if p==3: 
+    if bands==9: 
         detsumj = k*xsi*zeta + 2*np.real(a*b*np.conj(rho)) - xsi*(abs(rho)**2) - k*(abs(b)**2) - zeta*(abs(a)**2) 
         k -= k1; a -= a1; rho -= rho1; xsi -= xsi1; b -= b1; zeta -= zeta1 
         detsumj1 = k*xsi*zeta + 2*np.real(a*b*np.conj(rho)) - xsi*(abs(rho)**2) - k*(abs(b)**2) - zeta*(abs(a)**2)
         detj = k1*xsi1*zeta1 + 2*np.real(a1*b1*np.conj(rho1)) - xsi1*(abs(rho1)**2) - k1*(abs(b1)**2) - zeta1*(abs(a1)**2)
-    elif p==2:
+    elif bands==4:
         detsumj = k*xsi - abs(a)**2 
         k -= k1; a -= a1; xsi -= xsi1
         detsumj1 = k*xsi - abs(a)**2
         detj = k1*xsi1 - abs(a1)**2
-    elif p==1:
+    elif bands==3:
+        detsumj = k*xsi*zeta 
+        k -= k1; xsi -= xsi1;  zeta -= zeta1 
+        detsumj1 = k*xsi*zeta 
+        detj = k1*xsi1*zeta1
+    elif bands==2:
+        detsumj = k*xsi
+        k -= k1; xsi -= xsi1
+        detsumj1 = k*xsi
+        detj = k1*xsi1
+    elif bands==1:
         detsumj = k  
         k -= k1
         detsumj1 = k
@@ -154,29 +194,74 @@ def PV((fns,n,p,cols,rows,bands)):
     detj = np.nan_to_num(detj)
     detj = np.where(detj <= eps,eps,detj)
     logdetj = np.log(detj)
-#  test statistic    
-    lnRj = n*( p*( j*np.log(j)-(j-1)*np.log(j-1.) ) + (j-1)*logdetsumj1 + logdetj - j*logdetsumj )   
-    f =p**2
-    rhoj = 1 - (2.*p**2 - 1)*(1. + 1./(j*(j-1)))/(6.*p*n)
-    omega2j = -(p*p/4.)*(1.-1./rhoj)**2 + (1./(24.*n*n))*p*p*(p*p-1)*(1+(2.*j-1)/(j*(j-1))**2)/rhoj**2   
+#  test statistic
+    lnRj = n*( p*( j*np.log(j)-(j-1)*np.log(j-1.) ) + (j-1)*logdetsumj1 + logdetj - j*logdetsumj )  
+    if (bands==9) or (bands==4) or (bands==1):
+#      full quad, dual or single polarimetric        
+        f =p**2
+        rhoj = 1 - (2.*p**2 - 1)*(1. + 1./(j*(j-1)))/(6.*p*n)
+        omega2j = -(p*p/4.)*(1.-1./rhoj)**2 + (1./(24.*n*n))*p*p*(p*p-1)*(1+(2.*j-1)/(j*(j-1))**2)/rhoj**2  
+    else:
+#      approximate treatment of quad and dual diagonal matrix cases
+        f = bands
+        rhoj = 1.0
+        omega2j = 0.0        
 #  return p-values  
     Z = -2*rhoj*lnRj
     return 1.0 - ((1.-omega2j)*stats.chi2.cdf(Z,[f])+omega2j*stats.chi2.cdf(Z,[f+4]))
+
+def change_maps(pvarray,significance):
+    k = pvarray.shape[0]+1
+    n = pvarray.shape[2]
+#  map of most recent change occurrences
+    cmap = np.zeros(n,dtype=np.byte)    
+#  map of first change occurrence
+    smap = np.zeros(n,dtype=np.byte)
+#  change frequency map 
+    fmap = np.zeros(n,dtype=np.byte)
+#  bitemporal change maps
+    bmap = np.zeros((n,k-1),dtype=np.byte)  
+    for ell in range(k-1):
+        for j in range(ell,k-1):
+            pv = pvarray[ell,j,:]
+            idx = np.where( (pv <= significance) & (cmap == ell) )
+            idx1 = np.where( (pv <= significance) & (cmap == 0) )
+            fmap[idx] += 1 
+            cmap[idx] = j+1 
+            bmap[idx,j] = 255 
+            smap[idx1] = j+1
+    return (cmap,smap,fmap,bmap)
                        
 def main():  
     usage = '''
 Usage:
 ------------------------------------------------
-    python %s [-h] [-s significance] [-m] [-d dims] infile_1,infile_2,...,infile_n outfilename enl
-    
-    Perform sequential change detection on multi-temporal, polarimetric SAR imagery in covariance or 
-    coherency matrix format. 
-                  Use -m for a 3x3 median filter on p-values (e.g. for noisy satellite data)
-                  Use -d if files are to be co-registered to a subset of the first image, otherwise
-                      it is assumed that the images are co-registered and have identical spatial dimensions              
-                  infiles are comma-separated, no blank spaces
-                  outfilename is without path (will be written to same directory as infile_1)
---------------------------------------------'''%sys.argv[0]
+
+Sequential change detection for polarimetric SAR images
+
+python %s [OPTIONS]  infiles outfile enl
+
+Options:
+  
+  -h           this help
+  -m           run 3x3 median filter on p-values prior to thresholding (e.g. for noisy satellite data)  
+  -d  dims     files are to be co-registered to a subset dims = [x0,y0,rows,cols] of the first image, otherwise
+               it is assumed that the images are co-registered and have identical spatial dimensions  
+  -s  signif   significance level for change detection (default 0.01)
+
+infiles:
+
+  comma-separated list of full paths to input files, no blank spaces: /path/to/infile_1, ... ,/path/to/infile_k
+  
+outfile:
+
+  without path (will be written to same directory as infile_1)
+  
+enl:
+
+  equivalent number of looks
+
+-------------------------------------------------'''%sys.argv[0]
 
     options,args = getopt.getopt(sys.argv[1:],'hmd:s:')
     medianfilter = False
@@ -203,9 +288,8 @@ Usage:
     gdal.AllRegister()   
     start = time.time()    
 #  first SAR image   
-    try:              
-        inDataset1 = gdal.Open(fns[0],GA_ReadOnly)     
-        bands = inDataset1.RasterCount                         
+    try:            
+        inDataset1 = gdal.Open(fns[0],GA_ReadOnly)                             
         cols = inDataset1.RasterXSize
         rows = inDataset1.RasterYSize    
         bands = inDataset1.RasterCount
@@ -229,18 +313,22 @@ Usage:
             start1 = time.time()
             print '%s \nFailed, so running sequential co-registration ...'%e
             fns = map(call_register,args1)  
-            print 'elapsed time for co-registration: '+str(time.time()-start1)       
+            print 'elapsed time for co-registration: '+str(time.time()-start)
         fns.insert(0,fn0)              
 #  dimension
     if bands==9:       
         p = 3
     elif bands==4:
         p = 2
+    elif bands==3:
+        p = 3
+    elif bands==2:
+        p = 2
     elif bands==1:
         p = 1
     else:
         print 'incorrect number of bands'
-        return    
+        sys.exit(1) 
     print '==============================================='
     print '     Multi-temporal SAR Change Detection'
     print '==============================================='   
@@ -292,23 +380,7 @@ Usage:
             for j in range(i,k-1):
                 pvarray[i,j,:] = pvs[j-i].ravel() 
     print '\nelapsed time for p-value calculation: '+str(time.time()-start1)    
-#  map of most recent change occurrences
-    cmap = np.zeros((rows*cols),dtype=np.byte)    
-#  map of first change occurrence
-    smap = np.zeros((rows*cols),dtype=np.byte)
-#  change frequency map 
-    fmap = np.zeros((rows*cols),dtype=np.byte)
-#  bitemporal change maps
-    bmap = np.zeros((rows*cols,k-1),dtype=np.byte)  
-    for ell in range(k-1):
-        for j in range(ell,k-1):
-            pv = pvarray[ell,j,:]
-            idx = np.where( (pv <= significance) & (cmap == ell) )
-            idx1 = np.where( (pv <= significance) & (cmap == 0) )
-            fmap[idx] += 1 
-            cmap[idx] = j+1 
-            bmap[idx,j] = 255 
-            smap[idx1] = j+1
+    cmap,smap,fmap,bmap = change_maps(pvarray,significance)
 #  write to file system    
     cmap = np.reshape(cmap,(rows,cols))
     fmap = np.reshape(fmap,(rows,cols))

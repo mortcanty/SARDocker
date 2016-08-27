@@ -1,0 +1,5 @@
+#! /bin/bash
+# Run SAR Docker container
+docker stop sar
+docker rm sar
+docker run -d -p 433:8888 --name=sar --net=bridge -v /home/mort/Downloads:/home/imagery mort/sardocker

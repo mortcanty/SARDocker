@@ -4,18 +4,27 @@
 #  Purpose: ;    gamma MAP adaptive filtering for polarized SAR intensity images
 #            Ref: Oliver and Quegan (2004) Understanding SAR Images, Scitech 
 #  Usage:             
-#    python gamma_filter.py [-h] [-d dims] infile enl
+#    python gamma_filter.py [OPTIONS] infile enl
 #
-#  Copyright (c) 2015, Mort Canty
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
+# Copyright (c) 2016 Mort Canty
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 import os, sys, time, getopt
 import numpy as np
@@ -114,12 +123,24 @@ def gamma_filter((k,inimage,rows,cols,m)):
 
 def main():
     usage = '''
-    Usage:
-    ------------------------------------------------
-    python %s [-h] [-d dims] filename enl
+Usage:
+------------------------------------------------
+
+Run a gamma MAP filter in the diagonal elements 
+for a polarimetric matrix image
+
+python %s [OPTIONS] filename enl
     
-    Run a gamma MAP filter in the diagonal elements of a C or T matrix
-    ------------------------------------------------''' %sys.argv[0]
+Options:
+
+   -h     this help
+   -d     spatial subset list e.g. -d [0,0,300,300] 
+   
+enl:
+
+  equivalent number of looks   
+    
+------------------------------------------------''' %sys.argv[0]
     options,args = getopt.getopt(sys.argv[1:],'hd:')
     dims = None
     for option, value in options: 

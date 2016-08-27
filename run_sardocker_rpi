@@ -1,0 +1,18 @@
+#! /bin/bash
+# Run SAR Docker container
+# Start ipcontroller on the localhost, 
+# Copy the client  info to the container. 
+# Finally copy the engine information to the rpis' /home/pi/data directories 
+# which is shared by the rpi-sardocker containers.
+# On the rpis, execute ./run_sardocker to start the engines in the same container environment.
+# In the Jupyter notebook run c=Client('/home/ipcontroller-client.json')
+docker stop sar
+docker rm sar
+docker run -d -p 433:8888 --name=sar --net=bridge -v /media/mort/Elements/imagery/radarsat2bonn:/home/imagery mort/sardocker
+ipcontroller --ip=192.168.0.157 &
+sleep 1
+docker cp /home/mort/.ipython/profile_default/security/ipcontroller-client.json sar:/home
+sshpass -p hypriot scp /home/mort/.ipython/profile_default/security/ipcontroller-engine.json pirate@192.168.0.187:/home/pirate/data/ipcontroller-engine.json
+sshpass -p hypriot scp /home/mort/.ipython/profile_default/security/ipcontroller-engine.json pirate@192.168.0.168:/home/pirate/data/ipcontroller-engine.json
+sshpass -p hypriot ssh pirate@192.168.0.187 '/home/pirate/run_sardocker'
+sshpass -p hypriot ssh pirate@192.168.0.168 '/home/pirate/run_sardocker'

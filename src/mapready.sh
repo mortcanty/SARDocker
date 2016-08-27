@@ -73,4 +73,4 @@ dir=$imdir$(ls -l $imdir | grep 'MapReady$' | grep $1 | awk '{print $9}')
 subdir='/'$(ls -l $dir | grep [CT][23] | awk '{print $9}')'/'
 
 dir=$imdir$(ls -l $imdir | grep 'MapReady$' | grep $1 | awk '{print $9}')$subdir
-fn=$dir$(python /home/ingest.py $dir | tee /dev/tty | grep 'written' | awk '{print $5}')
+fn=$dir$(python /home/ingestsar.py $dir | tee /dev/tty | grep 'written' | awk '{print $5}')

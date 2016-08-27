@@ -8,7 +8,7 @@
 #    Takes input from covariance matrix format images generated
 #    from polsaringest.py
 #  Usage:             
-#    python enl.py 
+#    python enl.py [OPTIONS] filename
 #
 # MIT License
 # 
@@ -57,10 +57,20 @@ def main():
     usage = '''
 Usage:
 ------------------------------------------------
-python %s [-h] [-n] [-d dims] filename
 
-Enter filename of covariance matrix image. ENL image.
-will be written to the same directory with '_enl' appended.
+Calculate the equivalent number of looks for 
+a polarimetric matrix image
+
+python %s [OPTIONS] filename
+
+Options:
+
+   -h    this help
+   -n    suppress graphics output
+   -d    spatial subset list e.g. -d [0,0,400,40o]
+
+An ENL image will be written to the same directory with '_enl' appended.
+
 ------------------------------------------------''' %sys.argv[0]
     options,args = getopt.getopt(sys.argv[1:],'hnd:')
     dims = None

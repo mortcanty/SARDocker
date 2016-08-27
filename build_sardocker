@@ -1,0 +1,5 @@
+#!/bin/bash
+cd /home/mort/python/SARDocker/src
+docker stop sar
+docker rm sar
+docker build -t mort/sardocker .

@@ -4,7 +4,7 @@
 #  Purpose:  Display a multispectral image
 #             allowed formats: uint8, uint16,float32,float64 
 #  Usage (from command line):             
-#    python dispms.py  [options]
+#    python dispms.py  [OPTIONS]
 #
 # MIT License
 # 
@@ -30,12 +30,10 @@
 
 import sys, getopt, os
 from osgeo import gdal, osr
-from osgeo.gdalconst import GDT_Byte
+from osgeo.gdalconst import GDT_Byte, GA_ReadOnly
 import matplotlib.pyplot as plt
 from matplotlib import cm
-import  auxil.auxil as auxil 
 import numpy as np
-from osgeo.gdalconst import GA_ReadOnly
 
 
 def klm(fn,dims):
@@ -217,8 +215,6 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
     if filename1 == None:        
         filename1 = raw_input('Enter image filename: ')
     inDataset1 = gdal.Open(filename1,GA_ReadOnly)    
-    projection = inDataset1.GetProjection()
-    geotransform = inDataset1.GetGeoTransform() 
     try:                   
         cols = inDataset1.RasterXSize    
         rows = inDataset1.RasterYSize  
@@ -355,7 +351,7 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
             ticks = np.linspace(0.01,1.0,num_classes+1)
             ticklabels = map(str,range(num_classes+1))        
             cax = ax.imshow(X1[:,:,0])  
-            plt.axis('off')
+#            plt.axis('off')
             cax.set_clim(0.01,1.0)     
             jet = cm.get_cmap('jet')
             jet.set_under('black')
@@ -363,8 +359,8 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
             cbar.set_ticklabels(ticklabels)
         else:
             ax.imshow(X1) 
-            plt.axis('off')
-#        ax.set_title('%s: %s: %s: %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims))) 
+#            plt.axis('off')
+        ax.set_title('%s: %s: %s: %s\n'%(os.path.basename(filename1),enhance1, str(rgb), str(dims))) 
     if KLM:
         X1 = np.array(X1*255,dtype=np.uint8)           
         driver = gdal.GetDriverByName( 'GTiff' )
@@ -372,22 +368,7 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
         for i in range(3):        
             outBand = ds.GetRasterBand(i+1)
             outBand.WriteArray(X1[:,:,i],0,0) 
-            outBand.FlushCache() 
-#        if projection is not None:
-#            ds.SetProjection(projection) 
-#        if geotransform is not None:
-#            gt = list(geotransform)
-#            gt[0] = gt[0] + x0*gt[1]
-#            gt[3] = gt[3] + y0*gt[5]
-#        ds.SetGeoTransform(tuple(gt))                               
-#        "exec    gdalwarp -t_srs:epsg:900913 '/home/tmp.tif' '/home/tmp1.tif' "
-#        with open('/home/imagery/overlay_png.kml','w') as f:
-#            print >>f, klm('/home/temp1.tif').replace('_image_','overlay.png')           
-#            f.close() 
-#        os.remove('/home/tmp.tif')    
-#        os.remove('/home/tmp1.tif')
-            
-            
+            outBand.FlushCache()      
         driver = gdal.GetDriverByName( 'PNG' )
         driver.CreateCopy('/home/imagery/overlay.png', ds, 0)
         os.remove('/home/tmp.tif')            
@@ -398,18 +379,28 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
                       
 
 def main():
-    usage = '''Usage: python %s [-h] [-k] [-c][-C Classes] \n
-            [-l] [-L] [-o alpha] \n
-            [-e enhancementf] [-E enhancementF]\n
-            [-p posf] [P posF [-d dimsf] [-D dimsF]\n
-            [-f filename1] [-F filename2] \n
-                                        
-            if -f is not specified it will be queried\n
-            use -c  -C  for classification image\n 
-            use -k to generate a PNG of filename1 and associated KLM file to overlay (approximately) on Google Earth\n
-            use -o alpha to overlay right onto left image with transparency alpha\n
-            RGB bandPositions and spatialDimensions are lists, e.g., -p [1,4,3] -d [0,0,400,400] \n
-            enhancements: 1=linear255 2=linear 3=linear2pc 4=equalization 5=logarithmic\n'''%sys.argv[0]
+    usage = '''
+Usage: 
+--------------------------------------
+
+Display an RGB composite image
+
+python %s [OPTIONS] 
+
+Options:
+
+  -h       this help
+  -f       image or left-hand image (if not specified, it will be queried)
+  -F       right-hand image 
+  -e -E    enhancements (1=linear255 2=linear 3=linear2pc 4=equalization 5=logarithmic (default)) 
+  -p -P    RGB band position lists e.g. -p [1,2,3] 
+  -d -D    spatial subset lists e.g. -d [0,0,200,200]
+  -c -C    display as classification image
+  -o alpha overlay right image onto left with opacity alpha
+  -k       generate approximate KML overlay image
+  
+  -------------------------------------'''%sys.argv[0]
+  
     options,_ = getopt.getopt(sys.argv[1:],'hkco:Cf:F:p:P:d:D:e:E:')
     filename1 = None
     filename2 = None
