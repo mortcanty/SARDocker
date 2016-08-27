@@ -50,13 +50,10 @@ def PV((fns,n,p,cols,rows,bands)):
     '''Return p-values for change indices R^ell_j'''    
     
     def getmat(fn,cols,rows,bands):
-<<<<<<< HEAD
     #  read 9- 4- 3- 2- or 1-band preprocessed polarimetric matrix files 
     #  and return (complex) matrix elements
-=======
     #  read 9- 4- or 1-band preprocessed polarimetric matrix files 
     #  and return (complex) matrix elements 
->>>>>>> 030780b440b55833902b7772e932722eea821905
         try:
             inDataset1 = gdal.Open(fn,GA_ReadOnly)     
             if bands == 9:
