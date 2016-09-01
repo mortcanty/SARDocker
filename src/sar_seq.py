@@ -98,6 +98,7 @@ def PV((fns,n,p,cols,rows,bands)):
         #      C22 (xsi1)
                 b = inDataset1.GetRasterBand(4)
                 xsi1 = b.ReadAsArray(0,0,cols,rows)   
+                result = (k1,a1,xsi1)
             elif bands == 3:
         #      T11 (k1)
                 b = inDataset1.GetRasterBand(1)
