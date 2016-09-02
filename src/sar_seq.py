@@ -317,7 +317,9 @@ enl:
             print '%s \nFailed, so running sequential co-registration ...'%e
             fns = map(call_register,args1)  
             print 'elapsed time for co-registration: '+str(time.time()-start)
-        fns.insert(0,fn0)              
+        fns.insert(0,fn0)  
+#      point inDataset1 to the subset image for correct georefrerencing         
+        inDataset1 = gdal.Open(fn0,GA_ReadOnly)           
 #  dimension
     if bands==9:       
         p = 3
