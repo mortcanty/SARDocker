@@ -2,7 +2,11 @@
 
 This repo contains the source files for the Docker image mort/sardocker, which wraps
 command line versions of several polarimetric SAR Python scripts, most of which are described  the textbook 
-<a href="http://www.amazon.com/Analysis-Classification-Change-Detection-Sensing/dp/1466570377/ref=dp_ob_title_bk">Canty (2104). Image Analysis, Classification and Change Detection in Remote Sensing, 3rd Ed., CRC Press 2014</a>. 
+<a href="http://www.amazon.com/Analysis-Classification-Change-Detection-Sensing/dp/1466570377/ref=dp_ob_title_bk">Canty (2104). 
+Image Analysis, Classification and Change Detection in Remote Sensing, 3rd Ed., CRC Press 2014</a>. In addition new sequential change
+detection scripts implement the algorthms described in 
+<a href = "http://www2.imm.dtu.dk/pubdb/views/publication_details.php?id=6825"> Conradsen et al. (2016). Determining the points of
+change in time series of polarimetric SAR data. IEEE TGRS 54 (5) 3007-3024.</a>
 
 ### Installation 
  1. <a href="https://docs.docker.com/">Install Docker</a>
@@ -13,4 +17,3 @@ command line versions of several polarimetric SAR Python scripts, most of which 
     __localhost:433__
  4. Click on the tutorial, or open a new notebook with __New/Python 2__.
  
- https://microscaling-dot-yamm-track.appspot.com/Redirect?ukey=1DJB55A5hlrac5x9c6lXCxctwB9cJaRW_zrTt6tbcGQ8-381850004&key=YAMMID-25680887&link=https%3A%2F%2Fgithub.com%2Fmortcanty%2FSARDocker

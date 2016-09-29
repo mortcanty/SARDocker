@@ -66,6 +66,7 @@ RUN     sed -i "/# Configuration file for jupyter-notebook./a  \
 RUN     pip install ipywidgets
 RUN     jupyter nbextension enable --py widgetsnbextension
 RUN     pip install ipdb
+RUN     pip install folium
             
 #  my auxil
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
