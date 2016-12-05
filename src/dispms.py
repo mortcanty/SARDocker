@@ -316,11 +316,13 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
         if alpha is not None:
             f, ax = plt.subplots(figsize=(10,10)) 
             if cls:
-                ticks = np.linspace(0.0,1.0,num_classes+1)
+                ticks = np.linspace(0.01,1.0,num_classes+1)
                 ticklabels = map(str,range(num_classes+1))        
                 cax = ax.imshow(X1[:,:,0])  
-                cax.set_clim(0.0,1.0)         
-                cbar = f.colorbar(cax,orientation='horizontal', cmap='jet', ticks=ticks, shrink=0.8,pad=0.1)
+                cax.set_clim(0.01,1.0)         
+                jet = cm.get_cmap('jet')
+                jet.set_under('black')
+                cbar = f.colorbar(cax,orientation='horizontal', cmap='jet', ticks=ticks, shrink=1.0,pad=0.1)
                 cbar.set_ticklabels(ticklabels)
             else:
                 ax.imshow(X1)
@@ -355,7 +357,7 @@ def dispms(filename1=None,filename2=None,dims=None,DIMS=None,rgb=None,RGB=None,e
             cax.set_clim(0.01,1.0)     
             jet = cm.get_cmap('jet')
             jet.set_under('black')
-            cbar = fig.colorbar(cax,orientation='horizontal', cmap=jet, ticks=ticks, shrink=0.82,pad=0.05)
+            cbar = fig.colorbar(cax,orientation='horizontal', cmap=jet, ticks=ticks, shrink=1.0,pad=0.05)
             cbar.set_ticklabels(ticklabels)
         else:
             ax.imshow(X1) 

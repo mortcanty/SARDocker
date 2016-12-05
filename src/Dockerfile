@@ -87,9 +87,9 @@ EXPOSE 8888
 # add the Python scripts and set the startup command
 COPY    dispms.py /home/dispms.py
 COPY    ingestsar.py /home/ingestsar.py
-COPY    ingestsars1.py /home/ingestsars1.py
-COPY    ingestvnir.py /home/ingestvnir.py
-COPY    registersar.py /home/registersar.py
+COPY    ingests1s2.py /home/ingests1s2.py
+COPY    ingestrs2quad.py /home/ingestrs2quad.py
+COPY    register.py /home/register.py
 COPY    enlml.py /home/enlml.py
 COPY    subset.py /home/subset.py
 COPY    sar_seq.py /home/sar_seq.py
@@ -97,14 +97,18 @@ COPY    gamma_filter.py /home/gamma_filter.py
 
 COPY    mapready.sh /home/mapready.sh
 COPY    sar_seq_rs2.sh /home/sar_seq_rs2.sh
+COPY    sar_seq_rs2quad.sh /home/sar_seq_rs2quad.sh
 COPY    sar_seq_s1.sh /home/sar_seq_s1.sh
 COPY    sar_seq_tsx.sh /home/sar_seq_tsx.sh
 COPY    sar_seq.sh /home/sar_seq.sh
+COPY    sar_seq_a.sh /home/sar_seq_a.sh
 RUN     chmod u+x /home/mapready.sh
 RUN     chmod u+x /home/sar_seq_rs2.sh
+RUN     chmod u+x /home/sar_seq_rs2quad.sh
 RUN     chmod u+x /home/sar_seq_s1.sh
 RUN     chmod u+x /home/sar_seq_tsx.sh 
 RUN     chmod u+x /home/sar_seq.sh 
+RUN     chmod u+x /home/sar_seq_a.sh 
 
 # for rpis    
 #COPY    start4engines.sh /home/start4engines.sh    

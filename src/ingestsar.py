@@ -54,7 +54,7 @@ def ingest(path):
         files1 = os.listdir(path)
         files = []
         for afile in files1:
-            if re.search('C[1-3]{2}',afile):   # covarinace matrix format
+            if re.search('C[1-3]{2}',afile):   # covariance matrix format
                 files.append(afile)
             elif re.search('T[1-3]{2}',afile): # coherency matix format
                 files.append(afile)

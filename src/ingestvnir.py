@@ -80,7 +80,8 @@ def ingest(path):
             outBand.WriteArray(band)
             outBand.FlushCache()
             inDataset = None
-        outDataset = None
+            os.remove(files[i])
+        outDataset = None 
         print 'elapsed time: ' + str(time.time() - start)
         return outfn
     except Exception as e:

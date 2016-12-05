@@ -40,20 +40,18 @@ from osgeo.gdalconst import GA_ReadOnly, GDT_Byte
 from tempfile import NamedTemporaryFile
 
 def call_register((fn0,fni,dims)):
-    from registersar import register
-    return register(fn0,fni,dims)
+    from register import registersar
+    return registersar(fn0,fni,dims)
 
 def call_median_filter(pv):
     return ndimage.filters.median_filter(pv, size = (3,3))
  
-def PV((fns,n,p,cols,rows,bands)):
+def PV((fns,n,cols,rows,bands)):
     '''Return p-values for change indices R^ell_j'''    
     
     def getmat(fn,cols,rows,bands):
     #  read 9- 4- 3- 2- or 1-band preprocessed polarimetric matrix files 
     #  and return (complex) matrix elements
-    #  read 9- 4- or 1-band preprocessed polarimetric matrix files 
-    #  and return (complex) matrix elements 
         try:
             inDataset1 = gdal.Open(fn,GA_ReadOnly)     
             if bands == 9:
@@ -164,26 +162,31 @@ def PV((fns,n,p,cols,rows,bands)):
             k1 = n*np.float64(result[0])
             k += k1              
     if bands==9: 
+        p = 3
         detsumj = k*xsi*zeta + 2*np.real(a*b*np.conj(rho)) - xsi*(abs(rho)**2) - k*(abs(b)**2) - zeta*(abs(a)**2) 
         k -= k1; a -= a1; rho -= rho1; xsi -= xsi1; b -= b1; zeta -= zeta1 
         detsumj1 = k*xsi*zeta + 2*np.real(a*b*np.conj(rho)) - xsi*(abs(rho)**2) - k*(abs(b)**2) - zeta*(abs(a)**2)
         detj = k1*xsi1*zeta1 + 2*np.real(a1*b1*np.conj(rho1)) - xsi1*(abs(rho1)**2) - k1*(abs(b1)**2) - zeta1*(abs(a1)**2)
     elif bands==4:
+        p = 2
         detsumj = k*xsi - abs(a)**2 
         k -= k1; a -= a1; xsi -= xsi1
         detsumj1 = k*xsi - abs(a)**2
         detj = k1*xsi1 - abs(a1)**2
     elif bands==3:
+        p = 3
         detsumj = k*xsi*zeta 
         k -= k1; xsi -= xsi1;  zeta -= zeta1 
         detsumj1 = k*xsi*zeta 
         detj = k1*xsi1*zeta1
     elif bands==2:
+        p = 2
         detsumj = k*xsi
         k -= k1; xsi -= xsi1
         detsumj1 = k*xsi
         detj = k1*xsi1
     elif bands==1:
+        p = 1
         detsumj = k  
         k -= k1
         detsumj1 = k
@@ -200,15 +203,14 @@ def PV((fns,n,p,cols,rows,bands)):
 #  test statistic
     lnRj = n*( p*( j*np.log(j)-(j-1)*np.log(j-1.) ) + (j-1)*logdetsumj1 + logdetj - j*logdetsumj )  
     if (bands==9) or (bands==4) or (bands==1):
-#      full quad, dual or single polarimetric        
+#      full quad, dual or single pol  (p = 3 or 2)      
         f =p**2
-        rhoj = 1 - (2.*p**2 - 1)*(1. + 1./(j*(j-1)))/(6.*p*n)
-        omega2j = -(p*p/4.)*(1.-1./rhoj)**2 + (1./(24.*n*n))*p*p*(p*p-1)*(1+(2.*j-1)/(j*(j-1))**2)/rhoj**2  
     else:
-#      approximate treatment of quad and dual diagonal matrix cases
+#      quad and dual diagonal matrix cases (f = 3 or 2, p1 = p2 (= p3) =: p = 1)
         f = bands
-        rhoj = 1.0
-        omega2j = 0.0        
+        p = 1
+    rhoj = 1 - (2.*p**2 - 1)*(1. + 1./(j*(j-1)))/(6.*p*n)
+    omega2j = -(f/4.)*(1.-1./rhoj)**2 + (1./(24.*n*n))*p*p*(p*p-1)*(1+(2.*j-1)/(j*(j-1))**2)/rhoj**2     
 #  return p-values  
     Z = -2*rhoj*lnRj
     return 1.0 - ((1.-omega2j)*stats.chi2.cdf(Z,[f])+omega2j*stats.chi2.cdf(Z,[f+4]))
@@ -232,7 +234,7 @@ def change_maps(pvarray,significance):
             fmap[idx] += 1 
             cmap[idx] = j+1 
             bmap[idx,j] = 255 
-            smap[idx1] = j+1
+            smap[idx1] = j+1            
     return (cmap,smap,fmap,bmap)
                        
 def main():  
@@ -302,8 +304,8 @@ enl:
     if dims is not None:
 #  images are not yet co-registered, so subset first image and register the others
         _,_,cols,rows = dims
-        args1 = [(fns[0],fns[i],dims) for i in range(1,k)]
         fn0 = subset(fns[0],dims)
+        args1 = [(fns[0],fns[i],dims) for i in range(1,k)]
         try:
             print ' \nattempting parallel execution of co-registration ...' 
             start1 = time.time()  
@@ -320,20 +322,6 @@ enl:
         fns.insert(0,fn0)  
 #      point inDataset1 to the subset image for correct georefrerencing         
         inDataset1 = gdal.Open(fn0,GA_ReadOnly)           
-#  dimension
-    if bands==9:       
-        p = 3
-    elif bands==4:
-        p = 2
-    elif bands==3:
-        p = 3
-    elif bands==2:
-        p = 2
-    elif bands==1:
-        p = 1
-    else:
-        print 'incorrect number of bands'
-        sys.exit(1) 
     print '==============================================='
     print '     Multi-temporal SAR Change Detection'
     print '==============================================='   
@@ -365,7 +353,7 @@ enl:
         for i in range(k-1):  
             print i+1,  
             sys.stdout.flush()              
-            args1 = [(fns[i:j+2],n,p,cols,rows,bands) for j in range(i,k-1)]         
+            args1 = [(fns[i:j+2],n,cols,rows,bands) for j in range(i,k-1)]         
             pvs = v.map_sync(PV,args1) 
             if medianfilter:
                 pvs = v.map_sync(call_median_filter,pvs)           
@@ -378,7 +366,7 @@ enl:
         for i in range(k-1):        
             print i+1,   
             sys.stdout.flush()             
-            args1 = [(fns[i:j+2],n,p,cols,rows,bands) for j in range(i,k-1)]                         
+            args1 = [(fns[i:j+2],n,cols,rows,bands) for j in range(i,k-1)]                         
             pvs = map(PV,args1)            
             if medianfilter:
                 pvs = map(call_median_filter,pvs)

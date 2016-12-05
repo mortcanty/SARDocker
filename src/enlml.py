@@ -67,7 +67,7 @@ Options:
 
    -h    this help
    -n    suppress graphics output
-   -d    spatial subset list e.g. -d [0,0,400,40o]
+   -d    spatial subset list e.g. -d [0,0,400,400]
 
 An ENL image will be written to the same directory with '_enl' appended.
 
