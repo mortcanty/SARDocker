@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # install python environment for crc scripts
 RUN     apt-get install -y --no-install-recommends \
          python-numpy python-scipy \
-         python-gdal python-matplotlib libgdal-dev gdal-bin
+         python-gdal python-matplotlib 
 
 # package imported by auxil package (but not used)
 RUN     apt-get install -y --no-install-recommends python-tk
@@ -60,13 +60,13 @@ RUN     pip install "ipython[notebook]"
 RUN     pip install ipyparallel
 RUN     jupyter notebook --generate-config
 RUN     sed -i "/# Configuration file for jupyter-notebook./a  \ 
-                c.NotebookApp.server_extensions.append('ipyparallel.nbextension')" \
+                c.NotebookApp.password = u'sha1:e008edc6061d:7960c7798fffe65531a2073e85e219e3fd61f3d0'" \
                 /root/.jupyter/jupyter_notebook_config.py
                 
-RUN     pip install ipywidgets
-RUN     jupyter nbextension enable --py widgetsnbextension
-RUN     pip install ipdb
-RUN     pip install folium
+#RUN     pip install ipywidgets
+#RUN     jupyter nbextension enable --py widgetsnbextension
+#RUN     pip install ipdb
+#RUN     pip install folium
             
 #  my auxil
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
@@ -122,3 +122,5 @@ COPY    tutorialsar.ipynb /home/tutorialsar.ipynb
 
 WORKDIR /home  
 CMD     ["/notebook.sh"]
+#CMD      ["/bin/bash"]
+
