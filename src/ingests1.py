@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 #******************************************************************************
-#  Name:     ingestsars1.py
+#  Name:     ingests1.py
 #  Purpose:  ingest time series of vv and vh single pol SAR images to a series
 #            of 2-band images (dual pol diagonal only polarimetric matrix)
 #   
 #  Usage:     
-#    import ingestsars1
-#    ingestsars1.ingest(path)
+#    import ingests1
+#    ingests1.ingest(path)
 #              or 
 #    python ingestsars1.py [OPTIONS] path 
 #

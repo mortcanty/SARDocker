@@ -6,6 +6,8 @@ FROM     debian:jessie
 
 MAINTAINER Mort Canty "mort.canty@gmail.com"
 
+RUN rm -rf /var/lib/apt/lists/partial
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python \
     build-essential \
@@ -22,7 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # install python environment for crc scripts
 RUN     apt-get install -y --no-install-recommends \
          python-numpy python-scipy \
-         python-gdal python-matplotlib 
+         python-gdal python-matplotlib libgdal-dev gdal-bin
 
 # package imported by auxil package (but not used)
 RUN     apt-get install -y --no-install-recommends python-tk
@@ -63,10 +65,6 @@ RUN     sed -i "/# Configuration file for jupyter-notebook./a  \
                 c.NotebookApp.password = u'sha1:e008edc6061d:7960c7798fffe65531a2073e85e219e3fd61f3d0'" \
                 /root/.jupyter/jupyter_notebook_config.py
                 
-#RUN     pip install ipywidgets
-#RUN     jupyter nbextension enable --py widgetsnbextension
-#RUN     pip install ipdb
-#RUN     pip install folium
             
 #  my auxil
 COPY    dist/auxil-1.1.tar.gz /auxil-1.1.tar.gz
@@ -89,6 +87,10 @@ COPY    dispms.py /home/dispms.py
 COPY    ingestsar.py /home/ingestsar.py
 COPY    ingests1s2.py /home/ingests1s2.py
 COPY    ingestrs2quad.py /home/ingestrs2quad.py
+COPY    ingests1.py /home/ingests1.py
+COPY    ingestvnir.py /home/ingestvnir.py
+COPY    ingestgds1.py /home/ingestgds1.py
+
 COPY    register.py /home/register.py
 COPY    enlml.py /home/enlml.py
 COPY    subset.py /home/subset.py
