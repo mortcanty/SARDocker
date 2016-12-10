@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # install python environment for crc scripts
 RUN     apt-get install -y --no-install-recommends \
          python-numpy python-scipy \
-         python-gdal python-matplotlib 
+         python-gdal python-matplotlib libgdal-dev gdal-bin
 
 # package imported by auxil package (but not used)
 RUN     apt-get install -y --no-install-recommends python-tk

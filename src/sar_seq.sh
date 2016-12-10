@@ -15,7 +15,10 @@ echo 'Significance: ' $3
 
 imdir='/home/imagery/'
 outfn='result.tif'
-tmp=$(ls -l $imdir | grep [0-9]\.tif$ | awk '{print $9}')
+tmp1=$(ls -l $imdir | grep H_[0-9]\.tif$ | awk '{print $9}') 
+tmp2=$(ls -l $imdir | grep H_[1-9][0-9]\.tif$ | awk '{print $9}')
+tmp=$tmp1' '$tmp2
 fns=$imdir$(echo $tmp | sed "s; ;,$imdir;g")
 intervals=$(grep -o "," <<< "$fns" | wc -l)
-python /home/sar_seq.py -d $1 -s $3 -m $fns $outfn $2 
+echo 'intervals: ' $intervals
+python /home/sar_seq.py -d $1 -s $3 $fns $outfn $2 
