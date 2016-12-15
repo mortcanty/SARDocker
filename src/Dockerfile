@@ -88,9 +88,6 @@ COPY    ingestsar.py /home/ingestsar.py
 COPY    ingests1s2.py /home/ingests1s2.py
 COPY    ingestrs2quad.py /home/ingestrs2quad.py
 COPY    ingests1.py /home/ingests1.py
-COPY    ingestvnir.py /home/ingestvnir.py
-COPY    ingestgds1.py /home/ingestgds1.py
-
 COPY    register.py /home/register.py
 COPY    enlml.py /home/enlml.py
 COPY    subset.py /home/subset.py

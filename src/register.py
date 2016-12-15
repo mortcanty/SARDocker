@@ -333,7 +333,7 @@ def registervnir(file0, file1, dims=None, outfile=None, targetband=4):
         for k in range(bands1): 
             rasterBand = inDataset1.GetRasterBand(k+1)
             band = rasterBand.ReadAsArray(0, 0, cols1, rows1).astype(np.float32)
-            bn1 = np.nan_to_num(band)                  
+            bn1 = band#np.nan_to_num(band)                  
             bn2 = ndii.zoom(bn1, 1.0 / scale)
             bn2 = ndii.rotate(bn2, angle)
             bn2 = ndii.shift(bn2, shift)

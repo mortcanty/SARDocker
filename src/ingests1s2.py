@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 #******************************************************************************
 #  Name:     ingests1s2.py
-#  Purpose:  Unpack and ingest time series of sentinel-1 vv and vh single pol SAR images 
-#            downloaded from earth engine to a series of 2-band images 
-#            (dual pol diagonal only polarimetric matrix). If present, also
-#            unpack and ingest a single 4-band sentinel-2 image downloaded
-#            from earth engine. 
+#  Purpose:  Unpack and ingest time series of sentinel-1 vv, vh single pol 
+#            SAR or VVVH dual pol diagonal only images 
+#            exported from Earth Engine to and downloaded from from Google Drive 
+#            to a series of 2-band images (dual pol diagonal only polarimetric matrix).
+#            If present, also unpack and ingest a single 4-band sentinel-2 image downloaded
+#            from earth engine in ZIP format. 
 #   
 #  Usage:     
 #    import ingests1s2
-#    ingests1s2.ingest(path)
+#    ingests1s2.ingest(path,s1infile)
 #              or 
 #    python ingests1s2.py [OPTIONS] path 
 #
@@ -38,109 +39,106 @@ import sys, getopt, gdal, os, re, time
 from zipfile import ZipFile
 from osgeo.gdalconst import GA_ReadOnly, GDT_Float32, GDT_Int16
 
-def ingest(path):
+def ingest(path,s1infile):
     print '========================='
-    print '   Ingesting S1 and S2'
+    print '   Ingesting S1 (and S2)'
     print '========================='
     print time.asctime()  
-    print 'Directory %s'%path     
+    print 'Directory: %s'%path  
+    print 'Sentinel-1 filename: %s'%s1infile   
     gdal.AllRegister()
     start = time.time()
-    try:
-    #  unpack all archives in path
+    os.chdir(path)
+    try:    
         files = os.listdir(path)
-        zfiles = []
         for afile in files:
+#          unpack VNIR archive in path       
             if re.search('.zip',afile):  
-                zfiles.append(afile)    
-        os.chdir(path)
-        for zfile in zfiles:
-            ZipFile(zfile).extractall(path)                    
-    #  get sorted lists of VV and VH files    
+                ZipFile(afile).extractall(path)   
+    #  get sorted list of VNIR files
         files = os.listdir(path)
-        vvfiles = []
-        vhfiles = []
+        files1 = []
         for afile in files:
-            if re.search('\.VV_[0-9]{1,2}\.tif',afile):   
-                vvfiles.append(afile)
-            elif re.search('\.VH_[0-9]{1,2}\.tif',afile): 
-                vhfiles.append(afile)
-        if (len(vvfiles) != len(vhfiles)) or (len(vvfiles)==0) :
-            raise Exception('file mismatch or no files found')
-        os.chdir(path)
-        vvfiles.sort()
-        vhfiles.sort()
-    #  ingest VV and VH
-        inDataset1 = gdal.Open(vvfiles[0],GA_ReadOnly) 
-        driver = inDataset1.GetDriver() 
-        cols = inDataset1.RasterXSize
-        rows = inDataset1.RasterYSize        
-        for i in range(len(vvfiles)):
-            outfile = vvfiles[i].replace('VV','VVVH')
-            inDataset1 = gdal.Open(vvfiles[i],GA_ReadOnly)  
-            inDataset2 = gdal.Open(vhfiles[i],GA_ReadOnly)   
-            geotransform = inDataset1.GetGeoTransform()
-            projection = inDataset1.GetProjection()
-            outDataset = driver.Create(outfile,cols,rows,2,GDT_Float32)
-            if geotransform is not None:
-                outDataset.SetGeoTransform(geotransform)        
-            if projection is not None:
-                outDataset.SetProjection(projection)
-            inArray = inDataset1.GetRasterBand(1).ReadAsArray(0,0,cols,rows)
-            outBand = outDataset.GetRasterBand(1)    
-            outBand.WriteArray(inArray,0,0)
-            outBand.FlushCache()
-            outBand = outDataset.GetRasterBand(2)
-            inArray = inDataset2.GetRasterBand(1).ReadAsArray(0,0,cols,rows)
-            outBand.WriteArray(inArray,0,0) 
-            outBand.FlushCache()
-            print '%s and %s merged to %s'%(vvfiles[i],vhfiles[i],outfile) 
-        inDataset1 = None
-        inDataset2 = None
-        outDataset = None     
-        for i in range(len(vvfiles)):
-            os.remove(vvfiles[i].replace('.tif','.tfw'))
-            os.remove(vhfiles[i].replace('.tif','.tfw'))
-            os.remove(vvfiles[i])
-            os.remove(vhfiles[i])
-    #  get sorted list of VNIR files    
-        files1 = os.listdir(path)
-        files = []
-        for afile in files1:
             if re.search('B[1-8].tif',afile):  
-                files.append(afile)
-        files.sort()        
-        bands = len(files)
-        outfn = 'VNIR.tif'
-        gdal.AllRegister()   
-        inDataset = gdal.Open(files[0],GA_ReadOnly)
+                files1.append(afile)
+        if len(files1) > 0:
+            files1.sort()        
+            bands = len(files1)
+            outfn = path+'sentinel2.tif' 
+            inDataset = gdal.Open(files1[0],GA_ReadOnly)
+            cols = inDataset.RasterXSize
+            rows = inDataset.RasterYSize       
+        #  ingest to a single file
+            driver = gdal.GetDriverByName('GTiff') 
+            outDataset = driver.Create(outfn,cols,rows,bands,GDT_Int16)
+            projection = inDataset.GetProjection()
+            geotransform = inDataset.GetGeoTransform()
+            if geotransform is not None:
+                outDataset.SetGeoTransform(geotransform)
+            if projection is not None:
+                outDataset.SetProjection(projection)    
+            for i in range(bands):
+                print 'writing band %i'%(i+1)
+                inDataset = gdal.Open(files1[i])
+                inBand = inDataset.GetRasterBand(1)
+                band = inBand.ReadAsArray(0,0,cols,rows)
+                outBand = outDataset.GetRasterBand(i+1)
+                outBand.WriteArray(band)
+                outBand.FlushCache()
+                inDataset = None
+                os.remove(files1[i].replace('.tif','.tfw'))
+                os.remove(files1[i])
+            outDataset = None   
+            print 'created file %s' %outfn
+#      ingest the SAR image to a time series of files                
+        infile = path+s1infile
+        inDataset = gdal.Open(infile,GA_ReadOnly) 
+        driver = inDataset.GetDriver() 
         cols = inDataset.RasterXSize
-        rows = inDataset.RasterYSize       
-    #  ingest
-        driver = gdal.GetDriverByName('GTiff') 
-        outDataset = driver.Create(outfn,cols,rows,bands,GDT_Int16)
-        projection = inDataset.GetProjection()
-        geotransform = inDataset.GetGeoTransform()
-        if geotransform is not None:
-            outDataset.SetGeoTransform(geotransform)
-        if projection is not None:
-            outDataset.SetProjection(projection)
-        inDataset = None     
-        for i in range(bands):
-            print 'writing band %i'%(i+1)
-            inDataset = gdal.Open(files[i])
-            inBand = inDataset.GetRasterBand(1)
-            band = inBand.ReadAsArray(0,0,cols,rows)
-            outBand = outDataset.GetRasterBand(i+1)
-            outBand.WriteArray(band)
-            outBand.FlushCache()
-            inDataset = None
-            os.remove(files[i].replace('.tif','.tfw'))
-            os.remove(files[i])
-        outDataset = None   
-        print 'elapsed time: ' + str(time.time() - start)          
+        rows = inDataset.RasterYSize  
+        bands = inDataset.RasterCount      
+        if bands == 2:
+#          dual pol diagonal only  
+            for i in range(bands/2):
+                outfile = path+'sentinel1_VVVH_%i.tif'%(i+1)            
+                geotransform = inDataset.GetGeoTransform()
+                projection = inDataset.GetProjection()
+                outDataset = driver.Create(outfile,cols,rows,2,GDT_Float32)
+                if geotransform is not None:
+                    outDataset.SetGeoTransform(geotransform)        
+                if projection is not None:
+                    outDataset.SetProjection(projection)
+                inArray = inDataset.GetRasterBand(2*i+1).ReadAsArray(0,0,cols,rows)
+                outBand = outDataset.GetRasterBand(1)    
+                outBand.WriteArray(inArray,0,0)
+                outBand.FlushCache()
+                outBand = outDataset.GetRasterBand(2)
+                inArray = inDataset.GetRasterBand(2*i+2).ReadAsArray(0,0,cols,rows)
+                outBand.WriteArray(inArray,0,0) 
+                outBand.FlushCache()
+                outDataset = None
+                print 'created file %s'%outfile
+        else:
+#          single pol VV or VH 
+            for i in range(bands):
+                outfile = path+'sentinel1_VV_%i.tif'%(i+1)            
+                geotransform = inDataset.GetGeoTransform()
+                projection = inDataset.GetProjection()
+                outDataset = driver.Create(outfile,cols,rows,1,GDT_Float32)
+                if geotransform is not None:
+                    outDataset.SetGeoTransform(geotransform)        
+                if projection is not None:
+                    outDataset.SetProjection(projection)
+                inArray = inDataset.GetRasterBand(i+1).ReadAsArray(0,0,cols,rows)
+                outBand = outDataset.GetRasterBand(1)    
+                outBand.WriteArray(inArray,0,0)
+                outBand.FlushCache()
+                outDataset = None
+                print 'created file %s'%outfile                
+        inDataset = None   
+        print 'elapsed time: ' + str(time.time() - start)
     except Exception as e:
-        print 'Error %s'%e 
+        print 'Error %s'%e         
         return None     
 
 def main():
@@ -148,13 +146,15 @@ def main():
 Usage:
 ------------------------------------------------
 
-python %s [OPTIONS] PATH
+python %s [OPTIONS] PATH S1_INFILENAME
 
-    Unpack and ingest time series of vv and vh single pol SAR images in PATH
-    to a series of 2-band images (dualpol diagonal only polarimetric matrix).
-    If present, also  unpack and ingest a single 4-band sentinel-2 image downloaded
-    from earth engine.  
-    
+     Unpack and ingest time series of sentinel-1 vv, vh single pol 
+     SAR or VVVH dual pol diagonal only images 
+     exported from Earth Engine to and downloaded from from Google Drive 
+     to a series of 2-band images (dual pol diagonal only polarimetric matrix).
+     If present, also unpack and ingest a single 4-band sentinel-2 image downloaded
+     from earth engine in ZIP format. 
+
 Options:
 
    -h    this help
@@ -165,11 +165,11 @@ Options:
         if option == '-h':
             print usage
             return 
-    if len(args) != 1:              
+    if len(args) != 2:              
         print 'Incorrect number of arguments'
         print usage
         sys.exit(1)   
-    ingest(args[0])
+    ingest(args[0],args[1])
     
     
 if __name__ == '__main__':

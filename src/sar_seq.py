@@ -230,11 +230,11 @@ def change_maps(pvarray,significance):
         for j in range(ell,k-1):
             pv = pvarray[ell,j,:]
             idx = np.where( (pv <= significance) & (cmap == ell) )
-            idx1 = np.where( (pv <= significance) & (cmap == 0) )
             fmap[idx] += 1 
             cmap[idx] = j+1 
             bmap[idx,j] = 255 
-            smap[idx1] = j+1            
+            if ell==0:
+                smap[idx] = j+1             
     return (cmap,smap,fmap,bmap)
                        
 def main():  
