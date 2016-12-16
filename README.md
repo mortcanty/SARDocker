@@ -15,5 +15,6 @@ change in time series of polarimetric SAR data. IEEE TGRS 54 (5) 3007-3024.</a>
  where *your_image_directory* is the path to your SAR data. 
  3. Point your browser to  
     __localhost:433__
- 4. Click on the tutorial, or open a new notebook with __New/Python 2__.
+ 4. If asked for a password, enter 'mort'	    
+ 5. Click on the <a href="http://mortcanty.github.io/src/tutorialsar.html"> tutorial</a>, or open a new notebook with __New/Python 2__.
  
